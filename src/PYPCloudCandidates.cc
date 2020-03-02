@@ -37,7 +37,7 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
     m_cloud_state = m_editor->m_config.enableCloudInput ();
     m_cloud_source = m_editor->m_config.cloudInputSource ();
     m_cloud_candidates_number = 1;
-    m_first_cloud_candidate_position = 3;
+    m_first_cloud_candidate_position = 2;
     m_min_cloud_trigger_length = 2;
     m_cloud_flag = FALSE;
 }
@@ -60,7 +60,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     m_candidates.clear ();
     for (guint i = 0; i != m_cloud_candidates_number; i++) {
         EnhancedCandidate  enhanced;
-        enhanced.m_display_string = "...";
+        enhanced.m_display_string = "☁...";
         enhanced.m_candidate_type = CANDIDATE_CLOUD_INPUT;
         m_candidates.push_back (enhanced);
     }
@@ -95,8 +95,11 @@ CloudCandidates::selectCandidate (EnhancedCandidate & enhanced)
 {
     assert (CANDIDATE_CLOUD_INPUT == enhanced.m_candidate_type);
 
-    if (enhanced.m_display_string == "...")
+    if (enhanced.m_display_string == "☁...")
         return SELECT_CANDIDATE_ALREADY_HANDLED;
+    
+    if (g_str_has_prefix(enhanced.m_display_string, "☁"))
+        g_strreplace(enhanced.m_display_string, "☁", "")
 
     return SELECT_CANDIDATE_COMMIT;
 }
@@ -145,7 +148,7 @@ CloudCandidates::cloudResponseCallBack (GObject *source_object, GAsyncResult *re
                     {
                         int end =strcspn(resultsArr[i], ",");
                         std::string tmp = g_strndup(resultsArr[i]+2,end-3);
-                        cloudCandidates->m_candidates[i].m_display_string = tmp;
+                        cloudCandidates->m_candidates[i].m_display_string = "☁" + tmp;
                     }
                 }
             }
@@ -161,7 +164,7 @@ CloudCandidates::cloudResponseCallBack (GObject *source_object, GAsyncResult *re
                 gchar *prefix_str = prefix_arr[1];
                 gchar **suffix_arr = g_strsplit (prefix_str, "\"],", -1);
                 std::string tmp = suffix_arr[0];
-                cloudCandidates->m_candidates[0].m_display_string = tmp;
+                cloudCandidates->m_candidates[0].m_display_string = "☁" + tmp;
                 g_strfreev (prefix_arr);
                 g_strfreev (suffix_arr);
             }
@@ -212,7 +215,7 @@ CloudCandidates::cloudSyncRequest (const gchar* requestStr, std::vector<Enhanced
                     {
                         int end =strcspn (resultsArr[i], ",");
                         std::string tmp = g_strndup (resultsArr[i]+2, end-3);
-                        m_candidates[i].m_display_string = tmp;
+                        m_candidates[i].m_display_string = "☁" + tmp;
                     }
                 }
             }
@@ -228,7 +231,7 @@ CloudCandidates::cloudSyncRequest (const gchar* requestStr, std::vector<Enhanced
                 gchar *prefix_str = prefix_arr[1];
                 gchar **suffix_arr = g_strsplit (prefix_str, "\"],", -1);
                 std::string tmp = suffix_arr[0];
-                m_candidates[0].m_display_string = tmp;
+                m_candidates[0].m_display_string = "☁" + tmp;
                 g_strfreev (prefix_arr);
                 g_strfreev (suffix_arr);
             }
