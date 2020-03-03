@@ -49,12 +49,15 @@ CloudCandidates::~CloudCandidates ()
 gboolean
 CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
 {
-
+    FILE *log = fopen("/home/inoki/input.long.txt", "a");
     EnhancedCandidate testCan = candidates[m_first_cloud_candidate_position-1];
     /*have cloud candidates already*/
     if (testCan.m_candidate_type == CANDIDATE_CLOUD_INPUT)
+    {
+        fprintf(log, "Can no longer put character\n");
+        fclose(log);
         return FALSE;
-
+    }
 
     /* insert cloud candidates' placeholders */
     m_candidates.clear ();
@@ -70,7 +73,12 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     {
         const gchar *text = m_editor->m_text;
         if (strlen (text) >= m_min_cloud_trigger_length)
-            cloudSyncRequest (text, candidates);
+        {
+            cloudAsyncRequest (text, candidates);
+            fprintf(log, "Requesting %s\n", text);
+        } else {
+            fprintf(log, "The length of %s is less than %d\n", text, m_min_cloud_trigger_length);
+        }
     }
     else
     {
@@ -81,11 +89,13 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
         gchar *text=g_strjoinv ("",tempArray);
 
         if (strlen (text) >= m_min_cloud_trigger_length)
-            cloudSyncRequest (text, candidates);
+            cloudAsyncRequest (text, candidates);
 
         g_strfreev (tempArray);
         g_free (text);
     }
+
+    fclose(log);
 
     return TRUE;
 }
@@ -104,88 +114,74 @@ CloudCandidates::selectCandidate (EnhancedCandidate & enhanced)
 void
 CloudCandidates::cloudAsyncRequest (const gchar* requestStr, std::vector<EnhancedCandidate> & candidates)
 {
+    FILE *log = fopen("/home/inoki/input.url.txt", "a");
     GError **error = NULL;
     gchar *queryRequest;
     if (m_cloud_source == BAIDU)
         queryRequest= g_strdup_printf("http://olime.baidu.com/py?input=%s&inputtype=py&bg=0&ed=%d&result=hanzi&resultcoding=utf-8&ch_en=1&clientinfo=web&version=1",requestStr, m_cloud_candidates_number);
     else if (m_cloud_source == GOOGLE)
         queryRequest= g_strdup_printf("https://www.google.com/inputtools/request?ime=pinyin&text=%s",requestStr);
+
+    fprintf(log, "Creating message to %s\n", queryRequest);
+
     SoupMessage *msg = soup_message_new ("GET", queryRequest);
+
+    fprintf(log, "Requesting %s\n", queryRequest);
+
     soup_session_send_async (m_session, msg, NULL, cloudResponseCallBack, static_cast<gpointer> (this));
+
+    fclose(log);
 }
 
 void
 CloudCandidates::cloudResponseCallBack (GObject *source_object, GAsyncResult *result, gpointer user_data)
 {
+    FILE *log = fopen("/home/inoki/input.url.txt", "a");
     GError **error = NULL;
     GInputStream *stream = soup_session_send_finish (SOUP_SESSION(source_object), result, error);
 
-    gchar buffer[BUFFERLENGTH];
-    error = NULL;
-    g_input_stream_read (stream, buffer, BUFFERLENGTH, NULL, error);
     CloudCandidates *cloudCandidates = static_cast<CloudCandidates *> (user_data);
 
-    String res;
-    res.clear ();
-    res.append (buffer);
+    fprintf(log, "Processing...\n");
 
-    if (res)
-    {
-        if (cloudCandidates->m_cloud_source == BAIDU)
-        {
-            /*BAIDU */
-            if (res[11]=='T')
-            {
-                if (res[49] !=']')
-                {   
-                    /*respond true , with results*/
-                    gchar **resultsArr = g_strsplit(res.data()+49, "],", 0);
-                    guint resultsArrLength = g_strv_length(resultsArr);
-                    for(int i = 0; i != resultsArrLength-1; ++i)
-                    {
-                        int end =strcspn(resultsArr[i], ",");
-                        std::string tmp = g_strndup(resultsArr[i]+2,end-3);
-                        cloudCandidates->m_candidates[i].m_display_string = tmp;
-                    }
-                }
-            }
-        }
-        else if (cloudCandidates->m_cloud_source == GOOGLE)
-        {
-            /*GOOGLE */
-            const gchar *tmp_res = res;
-            const gchar *prefix = "[\"SUCCESS\"";
-            if (g_str_has_prefix (tmp_res, prefix))
-            {
-                gchar **prefix_arr = g_strsplit (tmp_res, "\",[\"", -1);
-                gchar *prefix_str = prefix_arr[1];
-                gchar **suffix_arr = g_strsplit (prefix_str, "\"],", -1);
-                std::string tmp = suffix_arr[0];
-                cloudCandidates->m_candidates[0].m_display_string = tmp;
-                g_strfreev (prefix_arr);
-                g_strfreev (suffix_arr);
-            }
-        }
-    }
+    cloudCandidates->processCloudResponse(stream, cloudCandidates->m_editor->m_candidates);
 
-    cloudCandidates->m_editor->update ();
+    // cloudCandidates->m_editor->update ();
 
+    cloudCandidates->m_editor->m_lookup_table.clear();
+    cloudCandidates->m_editor->fillLookupTable ();
+    
+    fprintf(log, "Processed candidature: %s\n", cloudCandidates->m_editor->m_candidates[cloudCandidates->m_first_cloud_candidate_position-1].m_display_string.c_str());
+
+    fclose(log);
 }
 
 void
 CloudCandidates::cloudSyncRequest (const gchar* requestStr, std::vector<EnhancedCandidate> & candidates)
 {
+    FILE *log = fopen("/home/inoki/input.url.txt", "a");
     GError **error = NULL;
     gchar *queryRequest;
     if (m_cloud_source == BAIDU)
         queryRequest= g_strdup_printf ("http://olime.baidu.com/py?input=%s&inputtype=py&bg=0&ed=%d&result=hanzi&resultcoding=utf-8&ch_en=1&clientinfo=web&version=1",requestStr, m_cloud_candidates_number);
     else if (m_cloud_source == GOOGLE)
         queryRequest= g_strdup_printf ("https://www.google.com/inputtools/request?ime=pinyin&text=%s",requestStr);
+    
+    fprintf(log, "Creating message to %s\n", queryRequest);
+    
     SoupMessage *msg = soup_message_new ("GET", queryRequest);
+
+    fprintf(log, "Requesting %s\n", queryRequest);
 
     GInputStream *stream = soup_session_send (m_session, msg, NULL, error);
 
-    simpleProcessCloudResponse(stream, candidates);
+    fprintf(log, "Processing %s\n", queryRequest);
+
+    processCloudResponse(stream, candidates);
+
+    fprintf(log, "Processed %s\n", queryRequest);
+
+    fclose(log);
 }
 
 void
@@ -247,23 +243,34 @@ CloudCandidates::simpleProcessCloudResponse (GInputStream *stream, std::vector<E
     }
 }
 
+#include <stdio.h>
+
 void
 CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<EnhancedCandidate> & candidates)
 {
+    FILE *log = fopen("/home/inoki/log.long.txt", "a");
+
     GError **error = NULL;
     JsonParser *parser = json_parser_new();
     JsonNode *root;
     guint result_counter = 0;
 
-    if (json_parser_load_from_stream(parser, stream, NULL, error) && error == NULL)
+    fprintf(log, "Parsing...\n");
+
+    if (!json_parser_load_from_stream(parser, stream, NULL, error) || error != NULL)
     {
+        fprintf(log, "Parse failed...\n");
         g_object_unref(parser);
+        fclose(log);
         return;
     }
+
+    fprintf(log, "Parser finished...\n");
 
     root = json_parser_get_root(parser);
     if (m_cloud_source == BAIDU && JSON_NODE_TYPE(root) == JSON_NODE_OBJECT)
     {
+        fprintf(log, "Baidu...\n");
         JsonObject *baidu_root_object = json_node_get_object(root);
         const gchar *baidu_response_status;
         JsonArray *baidu_result_array;
@@ -273,6 +280,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         if (!json_object_has_member(baidu_root_object, "status"))
         {
             g_object_unref(parser);
+            fclose(log);
             return;
         }
         
@@ -281,6 +289,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         if (g_strcmp0(baidu_response_status, "T"))
         {
             g_object_unref(parser);
+            fclose(log);
             return;
         }
 
@@ -301,7 +310,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         /**
          * 
          */
-
+        fprintf(log, "Google...\n");
         JsonArray *google_root_array = json_node_get_array(root);
         
         const gchar *google_response_status;
@@ -313,6 +322,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         if (json_array_get_length(google_root_array) <= 1)
         {
             g_object_unref(parser);
+            fclose(log);
             return;
         }
             
@@ -321,6 +331,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         if (g_strcmp0(google_response_status, "SUCCESS"))
         {
             g_object_unref(parser);
+            fclose(log);
             return;
         }
         
@@ -329,6 +340,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         if (json_array_get_length(google_root_array) < 1)
         {
             g_object_unref(parser);
+            fclose(log);
             return;
         }
 
@@ -343,6 +355,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         for(int i = 0; i < result_counter; ++i)
         {
             m_candidates[i].m_display_string = json_array_get_string_element(google_candidate_array, i);
+            fprintf(log, "Result: %s\n", m_candidates[i].m_display_string.c_str());
         }
     }
 
@@ -385,6 +398,9 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         enhanced.m_candidate_type = CANDIDATE_CLOUD_INPUT;
         m_candidates.push_back(enhanced);
     }
+
+    fprintf(log, "Finished...\n\n");
+    fclose(log);
 
     g_object_unref(parser);
 }
