@@ -74,7 +74,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
         const gchar *text = m_editor->m_text;
         if (strlen (text) >= m_min_cloud_trigger_length)
         {
-            cloudAsyncRequest (text, candidates);
+            cloudSyncRequest (text, candidates);
             fprintf(log, "Requesting %s\n", text);
         } else {
             fprintf(log, "The length of %s is less than %d\n", text, m_min_cloud_trigger_length);
@@ -89,7 +89,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
         gchar *text=g_strjoinv ("",tempArray);
 
         if (strlen (text) >= m_min_cloud_trigger_length)
-            cloudAsyncRequest (text, candidates);
+            cloudSyncRequest (text, candidates);
 
         g_strfreev (tempArray);
         g_free (text);
@@ -260,10 +260,12 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
     if (!json_parser_load_from_stream(parser, stream, NULL, error) || error != NULL)
     {
         fprintf(log, "Parse failed...\n");
+        g_input_stream_close(stream, NULL, error);
         g_object_unref(parser);
         fclose(log);
         return;
     }
+    g_input_stream_close(stream, NULL, error);
 
     fprintf(log, "Parser finished...\n");
 
