@@ -38,12 +38,17 @@
 #include "PYPLuaConverterCandidates.h"
 #endif
 
+#ifdef ENABLE_CLOUD_INPUT_MODE
+#include "PYPCloudCandidates.h"
+#endif
+
 #include "PYPEmojiCandidates.h"
 
 namespace PY {
 
 class PhoneticEditor : public Editor {
     friend class LibPinyinCandidates;
+    friend class CloudCandidates;
 
 public:
     PhoneticEditor (PinyinProperties & props, Config & config);
@@ -123,6 +128,10 @@ protected:
     LuaConverterCandidates m_lua_converter_candidates;
 #endif
 
+#ifdef ENABLE_CLOUD_INPUT_MODE
+    CloudCandidates m_cloud_candidates;
+#endif
+    
     EmojiCandidates m_emoji_candidates;
 
     TraditionalCandidates m_traditional_candidates;

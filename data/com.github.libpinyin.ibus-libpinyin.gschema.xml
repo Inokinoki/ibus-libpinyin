@@ -193,6 +193,26 @@
       <default>false</default>
       <summary>Show Suggestions</summary>
     </key>
+    <key name="enable-cloud-input" type="b">
+      <default>false</default>
+      <summary>Enable Cloud Input</summary>
+    </key>
+    <key name="cloud-input-source" type="i">
+      <default>0</default>
+      <summary>Cloud Input Source</summary>
+    </key>
+    <key name="first-cloud-candidate-position" type="i">
+      <default>2</default>
+      <summary>Position of First Cloud Candidate</summary>
+    </key>
+    <key name="cloud-candidates-number" type="i">
+      <default>1</default>
+      <summary>Cloud Candidates Number</summary>
+    </key>
+    <key name="minimum-cloud-input-trigger-length" type="i">
+      <default>2</default>
+      <summary>Minimum of Cloud Input Trigger Length</summary>
+    </key>
     <key name="opencc-config" type="s">
       <default>'s2t.json'</default>
       <summary>The config file which should be used by OpenCC for traditional input. Please consult the OpenCC documentation for more information</summary>
@@ -342,6 +362,26 @@
     <key name="show-suggestion" type="b">
       <default>false</default>
       <summary>Show Suggestions</summary>
+    </key>
+    <key name="enable-cloud-input" type="b">
+      <default>false</default>
+      <summary>Enable Cloud Input</summary>
+    </key>
+    <key name="cloud-input-source" type="i">
+      <default>0</default>
+      <summary>Cloud Input Source</summary>
+    </key>
+    <key name="first-cloud-candidate-position" type="i">
+      <default>2</default>
+      <summary>Position of First Cloud Candidate</summary>
+    </key>
+    <key name="cloud-candidates-number" type="i">
+      <default>1</default>
+      <summary>Cloud Candidates Number</summary>
+    </key>
+    <key name="minimum-cloud-input-trigger-length" type="i">
+      <default>2</default>
+      <summary>Minimum of Cloud Input Trigger Length</summary>
     </key>
     <key name="opencc-config" type="s">
       <default>'s2t.json'</default>
