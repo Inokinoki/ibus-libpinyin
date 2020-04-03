@@ -195,7 +195,7 @@ if test x"$enable_cloud_input_mode" = x"yes"; then
     AC_SUBST(LIBSOUP_LIBS)
 
     # check json-glib
-    PKG_CHECK_MODULES(JSONGLIB, [json-glib-1.0 >= 1.4])
+    PKG_CHECK_MODULES(JSONGLIB, [json-glib-1.0 >= 1.0])
     AC_SUBST(JSONGLIB_CFLAGS)
     AC_SUBST(JSONGLIB_LIBS)
 fi
