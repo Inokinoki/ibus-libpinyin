@@ -92,14 +92,6 @@ public:
     
     void disableCloudInput(void);
 
-    gboolean enableCloudInput (void) const      { return m_enable_cloud_input; }
-    guint cloudInputSource (void) const         { return m_cloud_input_source; }
-    guint minCloudInputTriggerLen (void) const  { return m_min_cloud_input_trigger_len; }
-    guint cloudCandidatesNumber (void) const    { return m_cloud_candidates_number; }
-    guint firstCloudCandidatePos (void) const   { return m_first_cloud_candidate_pos; }
-    
-    void disableCloudInput(void);
-
 protected:
     bool read (const gchar * name, bool defval);
     gint read (const gchar * name, gint defval);

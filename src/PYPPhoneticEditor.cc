@@ -38,11 +38,10 @@ PhoneticEditor::PhoneticEditor (PinyinProperties &props,
     m_lua_converter_candidates (this),
 #endif
     m_emoji_candidates (this),
-    m_traditional_candidates (this, config)
+    m_traditional_candidates (this, config),
 #ifdef ENABLE_CLOUD_INPUT_MODE
-    m_cloud_candidates(this),
+    m_cloud_candidates(this)
 #endif
-    m_traditional_candidates (this)
 {
 }
 
