@@ -64,6 +64,7 @@ public:
     gboolean m_cloud_flag;
     guint m_delayed_time;
     guint m_source_thread_id;
+    SoupMessage *m_message;
     
 private:
     static gboolean delayedCloudAsyncRequestCallBack (gpointer user_data);

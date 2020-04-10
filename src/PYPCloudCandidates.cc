@@ -155,6 +155,7 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
     m_delayed_time = m_editor->m_config.cloudRequestDelayTime ();
 
     m_source_thread_id = 0;
+    m_message = NULL;
 }
 
 CloudCandidates::~CloudCandidates ()
@@ -271,8 +272,14 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
         queryRequest= g_strdup_printf ("http://olime.baidu.com/py?input=%s&inputtype=py&bg=0&ed=%d&result=hanzi&resultcoding=utf-8&ch_en=1&clientinfo=web&version=1", requestStr, m_cloud_candidates_number);
     else if (m_cloud_source == GOOGLE)
         queryRequest= g_strdup_printf ("https://www.google.com/inputtools/request?ime=pinyin&text=%s&num=%d", requestStr, m_cloud_candidates_number);
+
+    /* Cancel message if there is a pending one */
+    if (m_message)
+        soup_session_cancel_message (m_session, m_message, SOUP_STATUS_CANCELLED);
+
     SoupMessage *msg = soup_message_new ("GET", queryRequest);
     soup_session_send_async (m_session, msg, NULL, cloudResponseCallBack, static_cast<gpointer> (this));
+    m_message = msg;
 
     /* Update loading text to replace pending text */
     for (guint i = 0; i < m_cloud_candidates_number; ++i)
@@ -306,6 +313,9 @@ CloudCandidates::cloudResponseCallBack (GObject *source_object, GAsyncResult *re
         cloudCandidates->m_editor->m_lookup_table.clear ();
         cloudCandidates->m_editor->fillLookupTable ();
         cloudCandidates->m_editor->updateLookupTableFast ();
+
+        /* Clean up message */
+        cloudCandidates->m_message = NULL;
     }
 }
 
