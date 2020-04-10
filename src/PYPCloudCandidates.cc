@@ -44,7 +44,8 @@ enum CandidateResponseParserError {
 
 static const std::string CANDIDATE_CLOUD_PREFIX = "☁";
 
-static const std::string CANDIDATE_PENDING_TEXT = CANDIDATE_CLOUD_PREFIX + "...";
+static const std::string CANDIDATE_PENDING_TEXT = CANDIDATE_CLOUD_PREFIX;
+static const std::string CANDIDATE_LOADING_TEXT = CANDIDATE_CLOUD_PREFIX + "...";
 static const std::string CANDIDATE_NO_CANDIDATE_TEXT = CANDIDATE_CLOUD_PREFIX + "[No Candidate]";
 static const std::string CANDIDATE_INVALID_DATA_TEXT = CANDIDATE_CLOUD_PREFIX + "[Invalid Data]";
 static const std::string CANDIDATE_BAD_FORMAT_TEXT = CANDIDATE_CLOUD_PREFIX + "[Bad Format]";
@@ -214,6 +215,7 @@ CloudCandidates::selectCandidate (EnhancedCandidate & enhanced)
     assert (CANDIDATE_CLOUD_INPUT == enhanced.m_candidate_type);
 
     if (enhanced.m_display_string == CANDIDATE_PENDING_TEXT ||
+        enhanced.m_display_string == CANDIDATE_LOADING_TEXT ||
         enhanced.m_display_string == CANDIDATE_BAD_FORMAT_TEXT ||
         enhanced.m_display_string == CANDIDATE_INVALID_DATA_TEXT)
         return SELECT_CANDIDATE_ALREADY_HANDLED;
@@ -271,6 +273,21 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
         queryRequest= g_strdup_printf ("https://www.google.com/inputtools/request?ime=pinyin&text=%s&num=%d", requestStr, m_cloud_candidates_number);
     SoupMessage *msg = soup_message_new ("GET", queryRequest);
     soup_session_send_async (m_session, msg, NULL, cloudResponseCallBack, static_cast<gpointer> (this));
+
+    /* Update loading text to replace pending text */
+    for (guint i = 0; i < m_cloud_candidates_number; ++i)
+    {
+        EnhancedCandidate & enhanced = m_editor->m_candidates[i + m_first_cloud_candidate_position - 1];
+
+        if (enhanced.m_display_string == CANDIDATE_PENDING_TEXT)
+        {
+            enhanced.m_display_string = CANDIDATE_LOADING_TEXT;
+            enhanced.m_candidate_type = CANDIDATE_CLOUD_INPUT;
+        }
+    }
+    m_editor->m_lookup_table.clear ();
+    m_editor->fillLookupTable ();
+    m_editor->updateLookupTableFast ();
 }
 
 void
