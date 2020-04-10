@@ -50,17 +50,23 @@ public:
     
     int selectCandidate (EnhancedCandidate & enhanced);
     
+    void cloudAsyncRequest (const gchar* requestStr);
     void cloudAsyncRequest (const gchar* requestStr, std::vector<EnhancedCandidate> & candidates);
     void cloudSyncRequest (const gchar* requestStr, std::vector<EnhancedCandidate> & candidates);
-    
+
+    void delayedCloudAsyncRequest (const gchar* requestStr);
+
     gboolean m_cloud_state;
     guint m_cloud_source;
     guint m_cloud_candidates_number;        
     guint m_first_cloud_candidate_position;
     guint m_min_cloud_trigger_length;
     gboolean m_cloud_flag;
+    guint m_delayed_time;
+    guint m_source_thread_id;
     
 private:
+    static gboolean delayedCloudAsyncRequestCallBack (gpointer user_data);
     static void cloudResponseCallBack (GObject *object, GAsyncResult *result, gpointer user_data);
 
     void processCloudResponse (GInputStream *stream, std::vector<EnhancedCandidate> & candidates);

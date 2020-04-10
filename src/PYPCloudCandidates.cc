@@ -26,7 +26,9 @@
 #include <assert.h>
 #include <pinyin.h>
 #include <cstring>
+#include <glib.h>
 #include "PYPPhoneticEditor.h"
+#include "PYPPinyinEditor.h"
 
 
 using namespace PY;
@@ -46,6 +48,13 @@ static const std::string CANDIDATE_PENDING_TEXT = CANDIDATE_CLOUD_PREFIX + "..."
 static const std::string CANDIDATE_NO_CANDIDATE_TEXT = CANDIDATE_CLOUD_PREFIX + "[No Candidate]";
 static const std::string CANDIDATE_INVALID_DATA_TEXT = CANDIDATE_CLOUD_PREFIX + "[Invalid Data]";
 static const std::string CANDIDATE_BAD_FORMAT_TEXT = CANDIDATE_CLOUD_PREFIX + "[Bad Format]";
+
+typedef struct
+{
+    guint thread_id;
+    const gchar request_str[MAX_PINYIN_LEN + 1];
+    CloudCandidates *cloud_candidates;
+} DelayedCloudAsyncRequestCallbackUserData;
 
 class CloudCandidatesResponseParser
 {
@@ -99,6 +108,30 @@ public:
     ~BaiduCloudCandidatesResponseJsonParser () { if (m_annotation) g_free ((gpointer)m_annotation); }
 };
 
+gboolean
+CloudCandidates::delayedCloudAsyncRequestCallBack (gpointer user_data)
+{
+    DelayedCloudAsyncRequestCallbackUserData *data = static_cast<DelayedCloudAsyncRequestCallbackUserData *> (user_data);
+    CloudCandidates *cloudCandidates;
+
+    if (!data)
+        return FALSE;
+
+    cloudCandidates = data->cloud_candidates;
+
+    if (!cloudCandidates)
+        return FALSE;
+
+    /* Only send with a latest timer */
+    if (data->thread_id == cloudCandidates->m_source_thread_id)
+    {
+        cloudCandidates->m_source_thread_id = 0;
+        cloudCandidates->cloudAsyncRequest(cloudCandidates->m_editor->m_text);
+    }
+
+    return FALSE;
+}
+
 CloudCandidates::CloudCandidates (PhoneticEditor * editor)
 {
     m_session = soup_session_new ();
@@ -110,6 +143,9 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
     m_first_cloud_candidate_position = m_editor->m_config.firstCloudCandidatePos ();
     m_min_cloud_trigger_length = m_editor->m_config.minCloudInputTriggerLen ();
     m_cloud_flag = FALSE;
+    m_delayed_time = 800;  /* unit: ms */
+
+    m_source_thread_id = 0;
 }
 
 CloudCandidates::~CloudCandidates ()
@@ -144,7 +180,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     {
         const gchar *text = m_editor->m_text;
         if (strlen (text) >= m_min_cloud_trigger_length)
-            cloudAsyncRequest (text, candidates);
+            delayedCloudAsyncRequest (text);
     }
     else
     {
@@ -155,7 +191,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
         gchar *text = g_strjoinv ("", tempArray);
 
         if (strlen (text) >= m_min_cloud_trigger_length)
-            cloudAsyncRequest (text, candidates);
+            delayedCloudAsyncRequest (text);
 
         g_strfreev (tempArray);
         g_free (text);
@@ -188,7 +224,36 @@ CloudCandidates::selectCandidate (EnhancedCandidate & enhanced)
 }
 
 void
+CloudCandidates::delayedCloudAsyncRequest (const gchar* requestStr)
+{
+    gpointer user_data;
+    DelayedCloudAsyncRequestCallbackUserData *data;
+    guint thread_id;
+
+    /* Cancel the latest timer, if applied */
+    if (m_source_thread_id != 0)
+        g_source_remove(m_source_thread_id);
+
+    /* Allocate memory for a DelayedCloudAsyncRequestCallbackUserData instance to take more callback user data */
+    user_data = g_malloc (sizeof(DelayedCloudAsyncRequestCallbackUserData));
+    data = static_cast<DelayedCloudAsyncRequestCallbackUserData *> (user_data);
+
+    strcpy((char *)(data->request_str), (const char *)requestStr);
+    data->cloud_candidates = this;
+
+    /* Record the latest timer */
+    thread_id = m_source_thread_id = g_timeout_add(m_delayed_time, delayedCloudAsyncRequestCallBack, user_data);
+    data->thread_id = thread_id;
+}
+
+void
 CloudCandidates::cloudAsyncRequest (const gchar* requestStr, std::vector<EnhancedCandidate> & candidates)
+{
+    cloudAsyncRequest(requestStr);
+}
+
+void
+CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
 {
     GError **error = NULL;
     gchar *queryRequest;
