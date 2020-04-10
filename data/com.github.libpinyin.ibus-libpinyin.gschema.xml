@@ -221,6 +221,10 @@
       <default>2</default>
       <summary>Minimum of Cloud Input Trigger Length</summary>
     </key>
+    <key name="cloud-request-delay-time" type="i">
+      <default>800</default>
+      <summary>Sending Cloud request with delay</summary>
+    </key>
   </schema>
   <schema path="/com/github/libpinyin/ibus-libpinyin/libbopomofo/" id="com.github.libpinyin.ibus-libpinyin.libbopomofo">
     <key name="auxiliary-select-key-f" type="i">
@@ -390,6 +394,10 @@
     <key name="minimum-cloud-input-trigger-length" type="i">
       <default>2</default>
       <summary>Minimum of Cloud Input Trigger Length</summary>
+    </key>
+    <key name="cloud-request-delay-time" type="i">
+      <default>800</default>
+      <summary>Sending Cloud request with delay</summary>
     </key>
   </schema>
 </schemalist>

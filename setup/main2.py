@@ -503,6 +503,7 @@ class PreferencesDialog:
         self.__minimum_trigger_length = self.__builder.get_object("MinimumTriggerLength")
         self.__cloud_candidates_number = self.__builder.get_object("CloudCandidatesNumber")
         self.__cloud_input_source = self.__builder.get_object("CloudInputSource")
+        self.__cloud_request_delay_time = self.__builder.get_object("CloudRequestDelayTime")
 
         # read values
         self.__init_enable_cloud_input.set_active(self.__get_value("enable-cloud-input"))
@@ -511,6 +512,7 @@ class PreferencesDialog:
         self.__cloud_candidates_number.set_value(self.__get_value("cloud-candidates-number"))
         self.__minimum_trigger_length.set_value(self.__get_value("minimum-cloud-input-trigger-length"))
         self.__cloud_input_source.set_active(self.__get_value("cloud-input-source"))
+        self.__cloud_request_delay_time.set_value(self.__get_value("cloud-request-delay-time") / 1000.0)
 
         if self.__init_enable_cloud_input.get_active():
             self.__cloud_input_source.set_sensitive(True)
@@ -531,6 +533,7 @@ class PreferencesDialog:
             self.__minimum_trigger_length.set_sensitive(val)
             self.__cloud_candidates_number.set_sensitive(val)
             self.__candidates_order.set_sensitive(val)
+            self.__cloud_request_delay_time.set_sensitive(val)
             
         def __candidates_order_changed_cb(adjustment):
             self.__set_value("first-cloud-candidate-position", int(adjustment.get_value()))
@@ -543,12 +546,17 @@ class PreferencesDialog:
 
         def __cloud_input_source_changed_cb(widget):
             self.__set_value("cloud-input-source", widget.get_active())
+        
+        def __cloud_request_delay_time_changed_cb(adjustment):
+            # Use millisecond
+            self.__set_value("cloud-request-delay-time", int(adjustment.get_value() * 1000))
 
         self.__init_enable_cloud_input.connect("toggled", __enable_cloud_input_cb)
         self.__candidates_order.connect("value-changed", __candidates_order_changed_cb)
         self.__minimum_trigger_length.connect("value-changed", __minimum_trigger_length_changed_cb)
         self.__cloud_candidates_number.connect("value-changed", __cloud_candidates_number_changed_cb)
         self.__cloud_input_source.connect("changed", __cloud_input_source_changed_cb)
+        self.__cloud_request_delay_time.connect("value-changed", __cloud_request_delay_time_changed_cb)
 
     def __init_about(self):
         # page About

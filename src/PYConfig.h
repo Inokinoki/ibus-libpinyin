@@ -89,6 +89,7 @@ public:
     guint minCloudInputTriggerLen (void) const  { return m_min_cloud_input_trigger_len; }
     guint cloudCandidatesNumber (void) const    { return m_cloud_candidates_number; }
     guint firstCloudCandidatePos (void) const   { return m_first_cloud_candidate_pos; }
+    guint cloudRequestDelayTime (void) const    { return m_cloud_request_delay_time; }
     
     void disableCloudInput(void);
 
@@ -156,6 +157,7 @@ protected:
     guint m_min_cloud_input_trigger_len;
     guint m_cloud_candidates_number;
     guint m_first_cloud_candidate_pos;
+    guint m_cloud_request_delay_time;
 };
 
 

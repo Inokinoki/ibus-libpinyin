@@ -132,6 +132,14 @@ CloudCandidates::delayedCloudAsyncRequestCallBack (gpointer user_data)
     return FALSE;
 }
 
+void
+CloudCandidates::delayedCloudAsyncRequestDestroyCallBack (gpointer user_data)
+{
+    /* Clean up */
+    if (user_data)
+        g_free (user_data);
+}
+
 CloudCandidates::CloudCandidates (PhoneticEditor * editor)
 {
     m_session = soup_session_new ();
@@ -143,7 +151,7 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
     m_first_cloud_candidate_position = m_editor->m_config.firstCloudCandidatePos ();
     m_min_cloud_trigger_length = m_editor->m_config.minCloudInputTriggerLen ();
     m_cloud_flag = FALSE;
-    m_delayed_time = 800;  /* unit: ms */
+    m_delayed_time = m_editor->m_config.cloudRequestDelayTime ();
 
     m_source_thread_id = 0;
 }
@@ -242,7 +250,7 @@ CloudCandidates::delayedCloudAsyncRequest (const gchar* requestStr)
     data->cloud_candidates = this;
 
     /* Record the latest timer */
-    thread_id = m_source_thread_id = g_timeout_add(m_delayed_time, delayedCloudAsyncRequestCallBack, user_data);
+    thread_id = m_source_thread_id = g_timeout_add_full(G_PRIORITY_DEFAULT, m_delayed_time, delayedCloudAsyncRequestCallBack, user_data, delayedCloudAsyncRequestDestroyCallBack);
     data->thread_id = thread_id;
 }
 
