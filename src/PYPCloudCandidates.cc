@@ -123,7 +123,7 @@ CloudCandidates::delayedCloudAsyncRequestCallBack (gpointer user_data)
     if (!cloudCandidates)
         return FALSE;
 
-    /* Only send with a latest timer */
+    /* only send with a latest timer */
     if (data->thread_id == cloudCandidates->m_source_thread_id)
     {
         cloudCandidates->m_source_thread_id = 0;
@@ -136,7 +136,7 @@ CloudCandidates::delayedCloudAsyncRequestCallBack (gpointer user_data)
 void
 CloudCandidates::delayedCloudAsyncRequestDestroyCallBack (gpointer user_data)
 {
-    /* Clean up */
+    /* clean up */
     if (user_data)
         g_free (user_data);
 }
@@ -148,12 +148,11 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
 
     m_cloud_state = m_editor->m_config.enableCloudInput ();
     m_cloud_source = m_editor->m_config.cloudInputSource ();
-    m_cloud_candidates_number = 1; /* m_editor->m_config.cloudCandidatesNumber (); */
-    /* m_first_cloud_candidate_position = m_editor->m_config.firstCloudCandidatePos (); */
     m_min_cloud_trigger_length = m_editor->m_config.minCloudInputTriggerLen ();
     m_cloud_flag = FALSE;
     m_delayed_time = m_editor->m_config.cloudRequestDelayTime ();
 
+    m_cloud_candidates_number = CLOUD_CANDIDATES_NUMBER;
     m_source_thread_id = 0;
     m_message = NULL;
 }
@@ -166,12 +165,6 @@ gboolean
 CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
 {
     EnhancedCandidate testCan;
-    
-    /* Validate candidate list length */
-    /*
-    if (candidates.size () < m_first_cloud_candidate_position)
-        return FALSE;
-    */
 
     /* search the first non-ngram candidate */
     for (m_cloud_candidates_first_pos = candidates.begin (); m_cloud_candidates_first_pos != candidates.end (); ++m_cloud_candidates_first_pos) {
@@ -193,8 +186,8 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
         m_candidates.push_back (enhanced);
     }
     candidates.insert (m_cloud_candidates_first_pos, m_candidates.begin (), m_candidates.end ());
-    
-    /* FIXME: whether this pos while change after inserting */
+
+    /* FIXME: whether this pos will change after inserting */
     m_candidates_end_pos = candidates.end();
 
     if (! m_editor->m_config.doublePinyin ())
@@ -232,18 +225,7 @@ CloudCandidates::selectCandidate (EnhancedCandidate & enhanced)
         enhanced.m_display_string == CANDIDATE_INVALID_DATA_TEXT)
         return SELECT_CANDIDATE_ALREADY_HANDLED;
 
-    /* Detect Candidate Prefix and remove it */
-    /*
-    std::string::iterator i = enhanced.m_display_string.begin ();
-    std::string::const_iterator j = CANDIDATE_CLOUD_PREFIX.cbegin ();
-    for (; j != CANDIDATE_CLOUD_PREFIX.cend (); ++i, ++j)
-        if (*i != *j)
-            break;
-
-    if (j == CANDIDATE_CLOUD_PREFIX.cend ())
-        enhanced.m_display_string.erase (enhanced.m_display_string.begin (), i);
-    */
-
+    /* take the cached candidate with the same candidate id */
     for (std::vector<EnhancedCandidate>::iterator pos = m_candidates.begin(); pos != m_candidates.end(); ++pos) {
         if (pos->m_candidate_id == enhanced.m_candidate_id) {
             enhanced.m_display_string = pos->m_display_string;
@@ -261,18 +243,18 @@ CloudCandidates::delayedCloudAsyncRequest (const gchar* requestStr)
     DelayedCloudAsyncRequestCallbackUserData *data;
     guint thread_id;
 
-    /* Cancel the latest timer, if applied */
+    /* cancel the latest timer, if applied */
     if (m_source_thread_id != 0)
         g_source_remove(m_source_thread_id);
 
-    /* Allocate memory for a DelayedCloudAsyncRequestCallbackUserData instance to take more callback user data */
+    /* allocate memory for a DelayedCloudAsyncRequestCallbackUserData instance to take more callback user data */
     user_data = g_malloc (sizeof(DelayedCloudAsyncRequestCallbackUserData));
     data = static_cast<DelayedCloudAsyncRequestCallbackUserData *> (user_data);
 
     strcpy((char *)(data->request_str), (const char *)requestStr);
     data->cloud_candidates = this;
 
-    /* Record the latest timer */
+    /* record the latest timer */
     thread_id = m_source_thread_id = g_timeout_add_full(G_PRIORITY_DEFAULT, m_delayed_time, delayedCloudAsyncRequestCallBack, user_data, delayedCloudAsyncRequestDestroyCallBack);
     data->thread_id = thread_id;
 }
@@ -293,7 +275,7 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
     else if (m_cloud_source == GOOGLE)
         queryRequest= g_strdup_printf ("https://www.google.com/inputtools/request?ime=pinyin&text=%s&num=%d", requestStr, m_cloud_candidates_number);
 
-    /* Cancel message if there is a pending one */
+    /* cancel message if there is a pending one */
     if (m_message)
         soup_session_cancel_message (m_session, m_message, SOUP_STATUS_CANCELLED);
 
@@ -301,7 +283,7 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
     soup_session_send_async (m_session, msg, NULL, cloudResponseCallBack, static_cast<gpointer> (this));
     m_message = msg;
 
-    /* Update loading text to replace pending text */
+    /* update loading text to replace pending text */
     for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
         if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type) {
             if (CANDIDATE_PENDING_TEXT == pos->m_display_string) {
@@ -310,18 +292,6 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
         } else
             break;
     }
-    /*
-    for (guint i = m_candidates_first_pos; i < m_cloud_candidates_number; ++i)
-    {
-        EnhancedCandidate & enhanced = m_editor->m_candidates[i + m_first_cloud_candidate_position - 1];
-
-        if (enhanced.m_display_string == CANDIDATE_PENDING_TEXT)
-        {
-            enhanced.m_display_string = CANDIDATE_LOADING_TEXT;
-            enhanced.m_candidate_type = CANDIDATE_CLOUD_INPUT;
-        }
-    }
-    */
     m_editor->m_lookup_table.clear ();
     m_editor->fillLookupTable ();
     m_editor->updateLookupTableFast ();
@@ -334,17 +304,17 @@ CloudCandidates::cloudResponseCallBack (GObject *source_object, GAsyncResult *re
     GInputStream *stream = soup_session_send_finish (SOUP_SESSION (source_object), result, error);
     CloudCandidates *cloudCandidates = static_cast<CloudCandidates *> (user_data);
 
-    /* Process results */
+    /* process results */
     cloudCandidates->processCloudResponse (stream, cloudCandidates->m_editor->m_candidates);
 
     if (strlen (cloudCandidates->m_editor->m_text) >= cloudCandidates->m_min_cloud_trigger_length)
     {
-        /* Regenerate lookup table */
+        /* regenerate lookup table */
         cloudCandidates->m_editor->m_lookup_table.clear ();
         cloudCandidates->m_editor->fillLookupTable ();
         cloudCandidates->m_editor->updateLookupTableFast ();
 
-        /* Clean up message */
+        /* clean up message */
         cloudCandidates->m_message = NULL;
     }
 }
@@ -382,12 +352,12 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
 
     if (! m_editor->m_config.doublePinyin ())
     {
-        /* Get current text in editor */
+        /* get current text in editor */
         text = m_editor->m_text;
     }
     else
     {
-        /* Get current double pinyin text */
+        /* get current double pinyin text */
         String stripped = m_editor->m_buffer;
         const gchar *temp= stripped;
         gchar** tempArray =  g_strsplit_set (temp, " |", -1);
@@ -408,7 +378,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
     {
         if (ret_code == PARSER_NOERR)
         {
-            /* Update to the candidates list */
+            /* update to the candidates list */
             std::vector<std::string> &updated_candidates = parser->getStringCandidates ();
 
             m_candidates.clear ();
@@ -482,7 +452,7 @@ CloudCandidatesResponseJsonParser::CloudCandidatesResponseJsonParser () : m_pars
 
 CloudCandidatesResponseJsonParser::~CloudCandidatesResponseJsonParser ()
 {
-    /* Free json parser object if necessary */
+    /* free json parser object if necessary */
     if (m_parser)
         g_object_unref (m_parser);
 }
@@ -494,7 +464,7 @@ guint CloudCandidatesResponseJsonParser::parse (GInputStream *stream)
     if (!stream)
         return PARSER_NETWORK_ERROR;
 
-    /* Parse Json from input steam */
+    /* parse Json from input steam */
     if (!json_parser_load_from_stream (m_parser, stream, NULL, error) || error != NULL)
     {
         g_input_stream_close (stream, NULL, error);  // Close stream to release libsoup connexion
@@ -512,7 +482,7 @@ guint CloudCandidatesResponseJsonParser::parse (const gchar *data)
     if (!data)
         return PARSER_NETWORK_ERROR;
 
-    /* Parse Json from data */
+    /* parse Json from data */
     if (!json_parser_load_from_data (m_parser, data, strlen (data), error) || error != NULL)
         return PARSER_BAD_FORMAT;
 
@@ -524,7 +494,7 @@ guint GoogleCloudCandidatesResponseJsonParser::parseJsonResponse (JsonNode *root
     if (!JSON_NODE_HOLDS_ARRAY (root))
         return PARSER_BAD_FORMAT;
 
-    /* Validate Google source and the structure of response */
+    /* validate Google source and the structure of response */
     JsonArray *google_root_array = json_node_get_array (root);
 
     const gchar *google_response_status;
@@ -554,7 +524,7 @@ guint GoogleCloudCandidatesResponseJsonParser::parseJsonResponse (JsonNode *root
     if (!google_candidate_annotation)
         return PARSER_INVALID_DATA;
 
-    /* Update annotation with the returned annotation */
+    /* update annotation with the returned annotation */
     m_annotation = google_candidate_annotation;
 
     google_candidate_array = json_array_get_array_element (google_result_array, 1);
@@ -578,7 +548,7 @@ guint BaiduCloudCandidatesResponseJsonParser::parseJsonResponse (JsonNode *root)
     if (!JSON_NODE_HOLDS_OBJECT (root))
         return PARSER_BAD_FORMAT;
 
-    /* Validate Baidu source and the structure of response */
+    /* validate Baidu source and the structure of response */
     JsonObject *baidu_root_object = json_node_get_object (root);
     const gchar *baidu_response_status;
     JsonArray *baidu_result_array;
@@ -605,7 +575,7 @@ guint BaiduCloudCandidatesResponseJsonParser::parseJsonResponse (JsonNode *root)
     if (!baidu_candidate_annotation)
         return PARSER_INVALID_DATA;
 
-    /* Update annotation with the returned annotation */
+    /* update annotation with the returned annotation */
     m_annotation = NULL;
     gchar **words = g_strsplit (baidu_candidate_annotation, "'", -1);
     m_annotation = g_strjoinv ("", words);

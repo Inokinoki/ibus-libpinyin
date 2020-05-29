@@ -36,6 +36,7 @@
 namespace PY {
     
 #define BUFFERLENGTH 2048
+#define CLOUD_CANDIDATES_NUMBER 1
     
 class PhoneticEditor;
 
