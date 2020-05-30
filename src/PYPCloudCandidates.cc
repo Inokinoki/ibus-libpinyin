@@ -306,9 +306,14 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
         } else
             break;
     }
-    m_editor->m_lookup_table.clear ();
-    m_editor->fillLookupTable ();
-    m_editor->updateLookupTableFast ();
+
+    /* only update lookup table when there is still pinyin text */
+    if (strlen (m_editor->m_text) >= m_min_cloud_trigger_length)
+    {
+        m_editor->m_lookup_table.clear ();
+        m_editor->fillLookupTable ();
+        m_editor->updateLookupTableFast ();
+    }
 }
 
 void
@@ -321,6 +326,7 @@ CloudCandidates::cloudResponseCallBack (GObject *source_object, GAsyncResult *re
     /* process results */
     cloudCandidates->processCloudResponse (stream, cloudCandidates->m_editor->m_candidates);
 
+    /* only update lookup table when there is still pinyin text */
     if (strlen (cloudCandidates->m_editor->m_text) >= cloudCandidates->m_min_cloud_trigger_length)
     {
         /* regenerate lookup table */
