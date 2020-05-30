@@ -222,7 +222,7 @@
       <summary>Cloud Candidates Number</summary>
     </key>
     <key name="cloud-request-delay-time" type="i">
-      <default>800</default>
+      <default>600</default>
       <summary>Sending Cloud request with delay</summary>
     </key>
   </schema>
@@ -396,7 +396,7 @@
       <summary>Cloud Candidates Number</summary>
     </key>
     <key name="cloud-request-delay-time" type="i">
-      <default>800</default>
+      <default>600</default>
       <summary>Sending Cloud request with delay</summary>
     </key>
   </schema>
