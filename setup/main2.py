@@ -499,37 +499,28 @@ class PreferencesDialog:
         self.__init_enable_cloud_input = self.__builder.get_object("InitEnableCloudInput")
 
         # cloud input option
-        self.__cloud_candidates_number = self.__builder.get_object("CloudCandidatesNumber")
         self.__cloud_input_source = self.__builder.get_object("CloudInputSource")
 
         # read values
         self.__init_enable_cloud_input.set_active(self.__get_value("enable-cloud-input"))
 
-        self.__cloud_candidates_number.set_value(self.__get_value("cloud-candidates-number"))
         self.__cloud_input_source.set_active(self.__get_value("cloud-input-source"))
 
         if self.__init_enable_cloud_input.get_active():
             self.__cloud_input_source.set_sensitive(True)
-            self.__cloud_candidates_number.set_sensitive(True)
         else:
             self.__cloud_input_source.set_sensitive(False)
-            self.__cloud_candidates_number.set_sensitive(False)
 
         # connect signals
         def __enable_cloud_input_cb(widget):
             val = widget.get_active()
             self.__set_value("enable-cloud-input", val)
             self.__cloud_input_source.set_sensitive(val)
-            self.__cloud_candidates_number.set_sensitive(val)
-
-        def __cloud_candidates_number_changed_cb(adjustment):
-            self.__set_value("cloud-candidates-number", int(adjustment.get_value()))
 
         def __cloud_input_source_changed_cb(widget):
             self.__set_value("cloud-input-source", widget.get_active())
 
         self.__init_enable_cloud_input.connect("toggled", __enable_cloud_input_cb)
-        self.__cloud_candidates_number.connect("value-changed", __cloud_candidates_number_changed_cb)
         self.__cloud_input_source.connect("changed", __cloud_input_source_changed_cb)
 
     def __init_about(self):
