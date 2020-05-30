@@ -164,16 +164,44 @@ CloudCandidates::~CloudCandidates ()
 gboolean
 CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
 {
-    EnhancedCandidate testCan;
+    /* refer pinyin retrieved in full pinyin mode */
+    const gchar *full_pinyin_text;
+
+    /* refer pinyin generated in double pinyin mode, need free */
+    gchar *double_pinyin_text;
+
+    /* check pinyin length */
+    if (! m_editor->m_config.doublePinyin ())
+    {
+        full_pinyin_text = m_editor->m_text;
+        if (strlen (full_pinyin_text) < m_min_cloud_trigger_length)
+            return FALSE;
+    }
+    else
+    {
+        m_editor->updateAuxiliaryText ();
+        String stripped = m_editor->m_buffer;
+        const gchar *temp= stripped;
+        gchar** tempArray =  g_strsplit_set (temp, " |", -1);
+        double_pinyin_text = g_strjoinv ("", tempArray);
+
+        if (strlen (double_pinyin_text) < m_min_cloud_trigger_length) {
+            g_strfreev (tempArray);
+            g_free (double_pinyin_text);
+            return FALSE;
+        }
+
+        g_strfreev (tempArray);
+    }
 
     /* search the first non-ngram candidate */
     for (m_cloud_candidates_first_pos = candidates.begin (); m_cloud_candidates_first_pos != candidates.end (); ++m_cloud_candidates_first_pos) {
         if (CANDIDATE_NBEST_MATCH != m_cloud_candidates_first_pos->m_candidate_type)
             break;
     }
-    testCan = *m_cloud_candidates_first_pos;
 
     /* have cloud candidates already */
+    EnhancedCandidate testCan = *m_cloud_candidates_first_pos;
     if (testCan.m_candidate_type == CANDIDATE_CLOUD_INPUT)
         return FALSE;
 
@@ -187,28 +215,14 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     }
     candidates.insert (m_cloud_candidates_first_pos, m_candidates.begin (), m_candidates.end ());
 
-    /* FIXME: whether this pos will change after inserting */
-    m_candidates_end_pos = candidates.end();
+    /* note the last cloud input candidate position */
+    m_candidates_end_pos = m_cloud_candidates_first_pos + m_cloud_candidates_number;
 
-    if (! m_editor->m_config.doublePinyin ())
-    {
-        const gchar *text = m_editor->m_text;
-        if (strlen (text) >= m_min_cloud_trigger_length)
-            delayedCloudAsyncRequest (text);
-    }
-    else
-    {
-        m_editor->updateAuxiliaryText ();
-        String stripped = m_editor->m_buffer;
-        const gchar *temp= stripped;
-        gchar** tempArray =  g_strsplit_set (temp, " |", -1);
-        gchar *text = g_strjoinv ("", tempArray);
-
-        if (strlen (text) >= m_min_cloud_trigger_length)
-            delayedCloudAsyncRequest (text);
-
-        g_strfreev (tempArray);
-        g_free (text);
+    if (! m_editor->m_config.doublePinyin ()) {
+        delayedCloudAsyncRequest (full_pinyin_text);
+    } else {
+        delayedCloudAsyncRequest (double_pinyin_text);
+        g_free (double_pinyin_text);
     }
 
     return TRUE;
