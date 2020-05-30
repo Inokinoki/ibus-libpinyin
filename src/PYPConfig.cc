@@ -70,7 +70,6 @@ const gchar * const CONFIG_NETWORK_DICTIONARY_END_TIMESTAMP   = "network-diction
 const gchar * const CONFIG_INIT_ENABLE_CLOUD_INPUT   = "enable-cloud-input";
 const gchar * const CONFIG_CLOUD_INPUT_SOURCE        = "cloud-input-source";   
 const gchar * const CONFIG_CLOUD_CANDIDATES_NUMBER   = "cloud-candidates-number";
-const gchar * const CONFIG_MINIMUM_TRIGGER_LENGTH    = "minimum-cloud-input-trigger-length";
 const gchar * const CONFIG_CLOUD_REQUEST_DELAY_TIME  = "cloud-request-delay-time";
 
 const pinyin_option_t PINYIN_DEFAULT_OPTION =
@@ -155,7 +154,6 @@ LibPinyinConfig::initDefaultValues (void)
     m_network_dictionary_start_timestamp = 0;
     m_network_dictionary_end_timestamp = 0;
     m_enable_cloud_input = FALSE;
-    m_min_cloud_input_trigger_len = 2;
     m_cloud_candidates_number = 1;
     m_cloud_input_source = BAIDU;
     m_cloud_request_delay_time = 800;
@@ -504,11 +502,6 @@ PinyinConfig::readDefaultValues (void)
         else
             m_option &= ~pinyin_options[i].option;
     }
-    m_min_cloud_input_trigger_len = read (CONFIG_MINIMUM_TRIGGER_LENGTH, 2);
-    if (m_min_cloud_input_trigger_len > 10 || m_min_cloud_input_trigger_len < 1) {
-        m_min_cloud_input_trigger_len = 2;
-        g_warn_if_reached ();
-    }
     m_cloud_candidates_number = read (CONFIG_CLOUD_CANDIDATES_NUMBER, 1);
     if (m_cloud_candidates_number > 10 || m_cloud_candidates_number < 1) {
         m_cloud_candidates_number = 1;
@@ -595,13 +588,6 @@ PinyinConfig::valueChanged (const std::string &schema_id,
         m_cloud_candidates_number = normalizeGVariant (value, 1);
         if (m_cloud_candidates_number > 10 || m_cloud_candidates_number < 1) {
             m_cloud_candidates_number = 1;
-            g_warn_if_reached ();
-        }
-    }
-    else if (CONFIG_MINIMUM_TRIGGER_LENGTH == name) {
-        m_min_cloud_input_trigger_len = normalizeGVariant (value, 2);
-        if (m_min_cloud_input_trigger_len > 10 || m_min_cloud_input_trigger_len < 1) {
-            m_min_cloud_input_trigger_len = 2;
             g_warn_if_reached ();
         }
     }

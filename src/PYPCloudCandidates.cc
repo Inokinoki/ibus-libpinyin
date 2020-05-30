@@ -148,10 +148,10 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
 
     m_cloud_state = m_editor->m_config.enableCloudInput ();
     m_cloud_source = m_editor->m_config.cloudInputSource ();
-    m_min_cloud_trigger_length = m_editor->m_config.minCloudInputTriggerLen ();
     m_cloud_flag = FALSE;
     m_delayed_time = m_editor->m_config.cloudRequestDelayTime ();
 
+    m_min_cloud_trigger_length = CLOUD_MINIMUM_TRIGGER_LENGTH;
     m_cloud_candidates_number = CLOUD_CANDIDATES_NUMBER;
     m_source_thread_id = 0;
     m_message = NULL;

@@ -74,7 +74,6 @@ Config::initDefaultValues (void)
     m_network_dictionary_end_timestamp = 0;
 
     m_enable_cloud_input = FALSE;
-    m_min_cloud_input_trigger_len = 2;
     m_cloud_candidates_number = 1;
     m_cloud_input_source = BAIDU;
     m_cloud_request_delay_time = 800;
@@ -193,7 +192,6 @@ void
 Config::disableCloudInput(void)
 {
     m_enable_cloud_input = false;
-    m_min_cloud_input_trigger_len = 2;
     m_cloud_candidates_number = 1;
     m_cloud_input_source = BAIDU;
     m_cloud_request_delay_time = 800;

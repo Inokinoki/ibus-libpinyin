@@ -37,7 +37,8 @@ namespace PY {
     
 #define BUFFERLENGTH 2048
 #define CLOUD_CANDIDATES_NUMBER 1
-    
+#define CLOUD_MINIMUM_TRIGGER_LENGTH 2
+
 class PhoneticEditor;
 
 class CloudCandidates : public EnhancedCandidates<PhoneticEditor> 
