@@ -76,7 +76,6 @@ Config::initDefaultValues (void)
     m_enable_cloud_input = FALSE;
     m_min_cloud_input_trigger_len = 2;
     m_cloud_candidates_number = 1;
-    m_first_cloud_candidate_pos = 3;
     m_cloud_input_source = BAIDU;
     m_cloud_request_delay_time = 800;
 }
@@ -195,7 +194,6 @@ Config::disableCloudInput(void)
 {
     m_enable_cloud_input = false;
     m_min_cloud_input_trigger_len = 2;
-    m_first_cloud_candidate_pos = 3;
     m_cloud_candidates_number = 1;
     m_cloud_input_source = BAIDU;
     m_cloud_request_delay_time = 800;
