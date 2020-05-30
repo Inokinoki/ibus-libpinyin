@@ -156,7 +156,7 @@ LibPinyinConfig::initDefaultValues (void)
     m_enable_cloud_input = FALSE;
     m_cloud_candidates_number = 1;
     m_cloud_input_source = BAIDU;
-    m_cloud_request_delay_time = 800;
+    m_cloud_request_delay_time = 600;
 }
 
 static const struct {
@@ -513,9 +513,9 @@ PinyinConfig::readDefaultValues (void)
         m_cloud_input_source = BAIDU;
         g_warn_if_reached ();
     }
-    m_cloud_request_delay_time = read (CONFIG_CLOUD_REQUEST_DELAY_TIME, 800);
+    m_cloud_request_delay_time = read (CONFIG_CLOUD_REQUEST_DELAY_TIME, 600);
     if (m_cloud_request_delay_time > 2000 || m_cloud_request_delay_time < 200) {
-        m_cloud_request_delay_time = 800;
+        m_cloud_request_delay_time = 600;
         g_warn_if_reached ();
     }
 #endif
@@ -600,9 +600,9 @@ PinyinConfig::valueChanged (const std::string &schema_id,
         }
     }
     else if (CONFIG_CLOUD_REQUEST_DELAY_TIME == name) {
-        m_cloud_request_delay_time = read (CONFIG_CLOUD_REQUEST_DELAY_TIME, 800);
+        m_cloud_request_delay_time = read (CONFIG_CLOUD_REQUEST_DELAY_TIME, 600);
         if (m_cloud_request_delay_time > 2000 || m_cloud_request_delay_time < 200) {
-            m_cloud_request_delay_time = 800;
+            m_cloud_request_delay_time = 600;
             g_warn_if_reached ();
         }
     }
