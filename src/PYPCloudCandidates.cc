@@ -395,17 +395,20 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
             /* update to the candidates list */
             std::vector<std::string> &updated_candidates = parser->getStringCandidates ();
 
-            m_candidates.clear ();
             std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos;
-            for (guint i = 0; pos != m_candidates_end_pos && i < updated_candidates.size (); ++i)
+            std::vector<EnhancedCandidate>::iterator cached_candidate_pos = m_candidates.begin();
+            for (guint i = 0; cached_candidate_pos != m_candidates.end() && pos != m_candidates_end_pos && i < updated_candidates.size ();
+                ++i, ++pos, ++cached_candidate_pos)
             {
+                /* display candidate with prefix in lookup table */
                 EnhancedCandidate & enhanced = *pos;
+                enhanced.m_candidate_id = i;
                 enhanced.m_display_string = CANDIDATE_CLOUD_PREFIX + updated_candidates[i];
 
-                EnhancedCandidate cached = *pos;
+                /* cache candidate without prefix in m_candidates */
+                EnhancedCandidate & cached = *cached_candidate_pos;
                 cached.m_display_string = updated_candidates[i];
                 cached.m_candidate_id = enhanced.m_candidate_id;
-                m_candidates.push_back(cached);
             }
         }
         else if (ret_code == PARSER_NO_CANDIDATE)
