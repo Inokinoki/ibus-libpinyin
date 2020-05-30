@@ -217,10 +217,6 @@
       <default>0</default>
       <summary>Cloud Input Source</summary>
     </key>
-    <key name="first-cloud-candidate-position" type="i">
-      <default>2</default>
-      <summary>Position of First Cloud Candidate</summary>
-    </key>
     <key name="cloud-candidates-number" type="i">
       <default>1</default>
       <summary>Cloud Candidates Number</summary>
@@ -398,10 +394,6 @@
     <key name="cloud-input-source" type="i">
       <default>0</default>
       <summary>Cloud Input Source</summary>
-    </key>
-    <key name="first-cloud-candidate-position" type="i">
-      <default>2</default>
-      <summary>Position of First Cloud Candidate</summary>
     </key>
     <key name="cloud-candidates-number" type="i">
       <default>1</default>
