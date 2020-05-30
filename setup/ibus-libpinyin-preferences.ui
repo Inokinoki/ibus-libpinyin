@@ -157,14 +157,6 @@
     <property name="page_increment">1</property>
     <property name="page_size">1</property>
   </object>
-  <object class="GtkAdjustment" id="DelayCloudRequestTime">
-    <property name="lower">0.1</property>
-    <property name="upper">3.0</property>
-    <property name="value">0.8</property>
-    <property name="step_increment">0.1</property>
-    <property name="page_increment">0.1</property>
-    <property name="page_size">1</property>
-  </object>
   <object class="GtkListStore" id="liststoreCloudInputSource">
     <columns>
       <!-- column-name cloud_Input_source -->
@@ -2371,47 +2363,6 @@
                                         <property name="position">1</property>
                                       </packing>
                                     </child>                                    
-                                  </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkHBox" id="hbox12">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="spacing">12</property>
-                                    <property name="homogeneous">True</property>
-                                    <child>
-                                      <object class="GtkLabel" id="label42">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Request Delay Time(s):</property>
-                                        <property name="use_markup">True</property>
-                                        <property name="xalign">0</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">True</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">0</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkHScale" id="CloudRequestDelayTime">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="adjustment">DelayCloudRequestTime</property>
-                                        <property name="digits">1</property>
-                                        <property name="value_pos">left</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">True</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">1</property>
-                                      </packing>
-                                    </child>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
