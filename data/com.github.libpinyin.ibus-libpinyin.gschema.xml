@@ -221,10 +221,6 @@
       <default>1</default>
       <summary>Cloud Candidates Number</summary>
     </key>
-    <key name="minimum-cloud-input-trigger-length" type="i">
-      <default>2</default>
-      <summary>Minimum of Cloud Input Trigger Length</summary>
-    </key>
     <key name="cloud-request-delay-time" type="i">
       <default>800</default>
       <summary>Sending Cloud request with delay</summary>
@@ -398,10 +394,6 @@
     <key name="cloud-candidates-number" type="i">
       <default>1</default>
       <summary>Cloud Candidates Number</summary>
-    </key>
-    <key name="minimum-cloud-input-trigger-length" type="i">
-      <default>2</default>
-      <summary>Minimum of Cloud Input Trigger Length</summary>
     </key>
     <key name="cloud-request-delay-time" type="i">
       <default>800</default>
