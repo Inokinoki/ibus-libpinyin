@@ -179,6 +179,10 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     }
     else
     {
+        /* check whether editor does have text */
+        if (strlen (m_editor->m_text) < m_min_cloud_trigger_length)
+            return FALSE;
+
         m_editor->updateAuxiliaryText ();
         String stripped = m_editor->m_buffer;
         const gchar *temp= stripped;
