@@ -127,7 +127,7 @@ CloudCandidates::delayedCloudAsyncRequestCallBack (gpointer user_data)
     if (data->thread_id == cloudCandidates->m_source_thread_id)
     {
         cloudCandidates->m_source_thread_id = 0;
-        cloudCandidates->cloudAsyncRequest(cloudCandidates->m_editor->m_text);
+        cloudCandidates->cloudAsyncRequest(data->request_str);
     }
 
     return FALSE;
