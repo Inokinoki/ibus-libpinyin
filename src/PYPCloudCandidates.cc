@@ -366,6 +366,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
     CloudCandidatesResponseJsonParser *parser = NULL;
     const gchar *text = NULL;
     gchar *double_pinyin_text = NULL;
+    gchar annotation[MAX_PINYIN_LEN + 1];
 
     if (m_cloud_source == BAIDU)
         parser = new BaiduCloudCandidatesResponseJsonParser ();
@@ -374,10 +375,16 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
 
     ret_code = parser->parse (stream);
 
+    strcpy (annotation, parser->getAnnotation ());
+
     if (! m_editor->m_config.doublePinyin ())
     {
         /* get current text in editor */
         text = m_editor->m_text;
+
+        /* strip annotation if necessary */
+        if (strlen (annotation) > strlen (text))
+            annotation[strlen (text)] = '\0';
     }
     else
     {
@@ -387,6 +394,10 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         gchar** tempArray =  g_strsplit_set (temp, " |", -1);
         double_pinyin_text = g_strjoinv ("", tempArray);
         g_strfreev (tempArray);
+
+        /* strip annotation if necessary */
+        if (strlen (annotation) > strlen (double_pinyin_text) && strlen (double_pinyin_text) > 0)
+            annotation[strlen (double_pinyin_text)] = '\0';
     }
 
     if (ret_code == PARSER_NETWORK_ERROR)
@@ -398,7 +409,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
                 break;
         }
     }
-    else if (!g_strcmp0 (parser->getAnnotation (), text) || !g_strcmp0 (parser->getAnnotation (), double_pinyin_text))
+    else if (!g_strcmp0 (annotation, text) || !g_strcmp0 (annotation, double_pinyin_text))
     {
         if (ret_code == PARSER_NOERR)
         {
