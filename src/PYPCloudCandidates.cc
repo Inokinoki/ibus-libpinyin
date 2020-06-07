@@ -169,18 +169,37 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     /* refer pinyin generated in double pinyin mode, need free */
     gchar *double_pinyin_text;
 
+    /* check the length of the first n-gram candidate */
+    std::vector<EnhancedCandidate>::iterator n_gram_sentence_candidate = candidates.begin ();
+    if (n_gram_sentence_candidate == candidates.end ())
+    {
+        m_cloud_candidates_first_pos = candidates.end ();
+        return FALSE;   /* no candidate */
+    }
+    if (g_utf8_strlen (n_gram_sentence_candidate->m_display_string.c_str(), -1) < CLOUD_MINIMUM_UTF8_TRIGGER_LENGTH)
+    {
+        m_cloud_candidates_first_pos = candidates.end ();
+        return FALSE;   /* do not request because there is only one character */
+    }
+
     /* check pinyin length */
     if (! m_editor->m_config.doublePinyin ())
     {
         full_pinyin_text = m_editor->m_text;
         if (strlen (full_pinyin_text) < m_min_cloud_trigger_length)
+        {
+            m_cloud_candidates_first_pos = candidates.end ();
             return FALSE;
+        }
     }
     else
     {
         /* check whether editor does have text */
         if (strlen (m_editor->m_text) < m_min_cloud_trigger_length)
+        {
+            m_cloud_candidates_first_pos = candidates.end ();
             return FALSE;
+        }
 
         m_editor->updateAuxiliaryText ();
         String stripped = m_editor->m_buffer;
@@ -188,7 +207,9 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
         gchar** tempArray =  g_strsplit_set (temp, " |", -1);
         double_pinyin_text = g_strjoinv ("", tempArray);
 
-        if (strlen (double_pinyin_text) < m_min_cloud_trigger_length) {
+        if (strlen (double_pinyin_text) < m_min_cloud_trigger_length)
+        {
+            m_cloud_candidates_first_pos = candidates.end ();
             g_strfreev (tempArray);
             g_free (double_pinyin_text);
             return FALSE;
