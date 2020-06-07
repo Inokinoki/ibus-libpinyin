@@ -57,7 +57,6 @@ public:
 
     void delayedCloudAsyncRequest (const gchar* requestStr);
 
-    gboolean m_cloud_state;
     guint m_cloud_source;
     guint m_cloud_candidates_number;
     guint m_min_cloud_trigger_length;

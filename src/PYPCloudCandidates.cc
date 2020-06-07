@@ -146,7 +146,6 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
     m_session = soup_session_new ();
     m_editor = editor;
 
-    m_cloud_state = m_editor->m_config.enableCloudInput ();
     m_cloud_source = m_editor->m_config.cloudInputSource ();
     m_cloud_flag = FALSE;
     m_delayed_time = m_editor->m_config.cloudRequestDelayTime ();
