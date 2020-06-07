@@ -232,7 +232,7 @@ PhoneticEditor::updateCandidates (void)
         m_emoji_candidates.processCandidates (m_candidates);
     
 #ifdef ENABLE_CLOUD_INPUT_MODE
-    if(m_cloud_candidates.m_cloud_state)
+    if(m_config.enableCloudInput ())
         m_cloud_candidates.processCandidates (m_candidates);
 #endif
     
