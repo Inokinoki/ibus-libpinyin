@@ -573,7 +573,7 @@ guint GoogleCloudCandidatesResponseJsonParser::parseJsonResponse (JsonNode *root
 
     google_response_array = json_array_get_array_element (google_root_array, 1);
 
-    if (json_array_get_length (google_root_array) < 1)
+    if (json_array_get_length (google_response_array) < 1)
         return PARSER_INVALID_DATA;
 
     google_result_array = json_array_get_array_element (google_response_array, 0);
