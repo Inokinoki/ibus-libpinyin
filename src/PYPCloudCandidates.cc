@@ -23,12 +23,13 @@
 #include "PYPCloudCandidates.h"
 #include "PYString.h"
 #include "PYConfig.h"
+#include "PYPPhoneticEditor.h"
+#include "PYPPinyinEditor.h"
+
 #include <assert.h>
 #include <pinyin.h>
 #include <cstring>
 #include <glib.h>
-#include "PYPPhoneticEditor.h"
-#include "PYPPinyinEditor.h"
 
 
 using namespace PY;
@@ -525,10 +526,10 @@ guint CloudCandidatesResponseJsonParser::parse (GInputStream *stream)
     /* parse Json from input steam */
     if (!json_parser_load_from_stream (m_parser, stream, NULL, error) || error != NULL)
     {
-        g_input_stream_close (stream, NULL, error);  // Close stream to release libsoup connexion
+        g_input_stream_close (stream, NULL, error);  /* Close stream to release libsoup connexion */
         return PARSER_BAD_FORMAT;
     }
-    g_input_stream_close (stream, NULL, error);  // Close stream to release libsoup connexion
+    g_input_stream_close (stream, NULL, error);  /* Close stream to release libsoup connexion */
 
     return parseJsonResponse (json_parser_get_root (m_parser));
 }
