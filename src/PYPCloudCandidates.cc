@@ -366,7 +366,13 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
 
     ret_code = parser->parse (stream);
 
-    strcpy (annotation, parser->getAnnotation ());
+    if (parser->getAnnotation ())
+        strcpy (annotation, parser->getAnnotation ());
+    else
+    {
+        /* the request might have been cancelled */
+        return;
+    }
 
     if (! m_editor->m_config.doublePinyin ())
     {
