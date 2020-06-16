@@ -311,11 +311,7 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
 
     /* only update lookup table when there is still pinyin text */
     if (strlen (m_editor->m_text) >= CLOUD_MINIMUM_TRIGGER_LENGTH)
-    {
-        m_editor->m_lookup_table.clear ();
-        m_editor->fillLookupTable ();
-        m_editor->updateLookupTableFast ();
-    }
+        updateLookupTable ();
 }
 
 void
@@ -331,18 +327,7 @@ CloudCandidates::cloudResponseCallBack (GObject *source_object, GAsyncResult *re
     /* only update lookup table when there is still pinyin text */
     if (strlen (cloudCandidates->m_editor->m_text) >= CLOUD_MINIMUM_TRIGGER_LENGTH)
     {
-        /* retrieve cursor position in lookup table */
-        guint cursor = cloudCandidates->m_editor->m_lookup_table.cursorPos ();
-
-        /* regenerate lookup table */
-        cloudCandidates->m_editor->m_lookup_table.clear ();
-        cloudCandidates->m_editor->fillLookupTable ();
-
-        /* recover cursor position in lookup table */
-        cloudCandidates->m_editor->m_lookup_table.setCursorPos (cursor);
-
-        /* notify ibus */
-        cloudCandidates->m_editor->updateLookupTableFast ();
+        cloudCandidates->updateLookupTable ();
 
         /* clean up message */
         cloudCandidates->m_message = NULL;
@@ -464,6 +449,23 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
 
     if (double_pinyin_text)
         g_free (double_pinyin_text);
+}
+
+void
+CloudCandidates::updateLookupTable ()
+{
+    /* retrieve cursor position in lookup table */
+    guint cursor = m_editor->m_lookup_table.cursorPos ();
+
+    /* regenerate lookup table */
+    m_editor->m_lookup_table.clear ();
+    m_editor->fillLookupTable ();
+
+    /* recover cursor position in lookup table */
+    m_editor->m_lookup_table.setCursorPos (cursor);
+
+    /* notify ibus */
+    m_editor->updateLookupTableFast ();
 }
 
 std::vector<EnhancedCandidate> CloudCandidatesResponseParser::getCandidates ()

@@ -58,6 +58,8 @@ public:
 
     void delayedCloudAsyncRequest (const gchar* requestStr);
 
+    void updateLookupTable ();
+
     guint m_cloud_source;
     guint m_cloud_candidates_number;
     guint m_min_cloud_trigger_length;
