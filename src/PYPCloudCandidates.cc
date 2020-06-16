@@ -152,7 +152,6 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
     m_delayed_time = m_editor->m_config.cloudRequestDelayTime ();
     m_cloud_candidates_number = m_editor->m_config.cloudCandidatesNumber ();
 
-    m_min_cloud_trigger_length = CLOUD_MINIMUM_TRIGGER_LENGTH;
     m_source_thread_id = 0;
     m_message = NULL;
 }
@@ -185,36 +184,14 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
 
     /* check pinyin length */
     if (! m_editor->m_config.doublePinyin ())
-    {
         full_pinyin_text = m_editor->m_text;
-        if (strlen (full_pinyin_text) < m_min_cloud_trigger_length)
-        {
-            m_cloud_candidates_first_pos = candidates.end ();
-            return FALSE;
-        }
-    }
     else
     {
-        /* check whether editor does have text */
-        if (strlen (m_editor->m_text) < m_min_cloud_trigger_length)
-        {
-            m_cloud_candidates_first_pos = candidates.end ();
-            return FALSE;
-        }
-
         m_editor->updateAuxiliaryText ();
         String stripped = m_editor->m_buffer;
         const gchar *temp= stripped;
         gchar** tempArray =  g_strsplit_set (temp, " |", -1);
         double_pinyin_text = g_strjoinv ("", tempArray);
-
-        if (strlen (double_pinyin_text) < m_min_cloud_trigger_length)
-        {
-            m_cloud_candidates_first_pos = candidates.end ();
-            g_strfreev (tempArray);
-            g_free (double_pinyin_text);
-            return FALSE;
-        }
 
         g_strfreev (tempArray);
     }
@@ -333,7 +310,7 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
     }
 
     /* only update lookup table when there is still pinyin text */
-    if (strlen (m_editor->m_text) >= m_min_cloud_trigger_length)
+    if (strlen (m_editor->m_text) >= CLOUD_MINIMUM_TRIGGER_LENGTH)
     {
         m_editor->m_lookup_table.clear ();
         m_editor->fillLookupTable ();
@@ -352,7 +329,7 @@ CloudCandidates::cloudResponseCallBack (GObject *source_object, GAsyncResult *re
     cloudCandidates->processCloudResponse (stream, cloudCandidates->m_editor->m_candidates);
 
     /* only update lookup table when there is still pinyin text */
-    if (strlen (cloudCandidates->m_editor->m_text) >= cloudCandidates->m_min_cloud_trigger_length)
+    if (strlen (cloudCandidates->m_editor->m_text) >= CLOUD_MINIMUM_TRIGGER_LENGTH)
     {
         /* regenerate lookup table */
         cloudCandidates->m_editor->m_lookup_table.clear ();
