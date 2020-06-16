@@ -331,9 +331,17 @@ CloudCandidates::cloudResponseCallBack (GObject *source_object, GAsyncResult *re
     /* only update lookup table when there is still pinyin text */
     if (strlen (cloudCandidates->m_editor->m_text) >= CLOUD_MINIMUM_TRIGGER_LENGTH)
     {
+        /* retrieve cursor position in lookup table */
+        guint cursor = cloudCandidates->m_editor->m_lookup_table.cursorPos ();
+
         /* regenerate lookup table */
         cloudCandidates->m_editor->m_lookup_table.clear ();
         cloudCandidates->m_editor->fillLookupTable ();
+
+        /* recover cursor position in lookup table */
+        cloudCandidates->m_editor->m_lookup_table.setCursorPos (cursor);
+
+        /* notify ibus */
         cloudCandidates->m_editor->updateLookupTableFast ();
 
         /* clean up message */
