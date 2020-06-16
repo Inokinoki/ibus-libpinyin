@@ -230,12 +230,7 @@ PhoneticEditor::updateCandidates (void)
 
     if (m_config.emojiCandidate ())
         m_emoji_candidates.processCandidates (m_candidates);
-    
-#ifdef ENABLE_CLOUD_INPUT_MODE
-    if(m_config.enableCloudInput ())
-        m_cloud_candidates.processCandidates (m_candidates);
-#endif
-    
+
 #ifdef IBUS_BUILD_LUA_EXTENSION
     m_lua_trigger_candidates.processCandidates (m_candidates);
 
@@ -245,6 +240,12 @@ PhoneticEditor::updateCandidates (void)
         m_lua_converter_candidates.setConverter (converter.c_str ());
         m_lua_converter_candidates.processCandidates (m_candidates);
     }
+#endif
+
+#ifdef ENABLE_CLOUD_INPUT_MODE
+    /* keep me behind the other kinds of candidates which are inserted after n-gram candidates */
+    if(m_config.enableCloudInput ())
+        m_cloud_candidates.processCandidates (m_candidates);
 #endif
 
     if (!m_props.modeSimp ())
