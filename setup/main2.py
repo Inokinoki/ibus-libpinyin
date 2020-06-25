@@ -116,7 +116,7 @@ class PreferencesDialog:
         self.__page_dictionary = self.__builder.get_object("pageDictionary")
         self.__page_user_data = self.__builder.get_object("pageUserData")
         self.__page_shortcut = self.__builder.get_object("pageShortcut")
-        self.__page_cloud_input = self.__builder.get_object("pageCloudInput")
+        self.__frame_cloud_input = self.__builder.get_object("frameCloudInput")
         self.__page_about = self.__builder.get_object("pageAbout")
 
         self.__page_general.hide()
@@ -125,7 +125,7 @@ class PreferencesDialog:
         self.__page_fuzzy.hide()
         self.__page_dictionary.hide()
         self.__page_user_data.hide()
-        self.__page_cloud_input.hide()
+        self.__frame_cloud_input.hide()
         self.__page_about.hide()
 
     def __init_general(self):
@@ -493,7 +493,7 @@ class PreferencesDialog:
 
     def __init_cloud_input(self):
         # page CloudInput
-        self.__page_cloud_input.show()
+        self.__frame_cloud_input.show()
 
         # init state
         self.__init_enable_cloud_input = self.__builder.get_object("InitEnableCloudInput")
