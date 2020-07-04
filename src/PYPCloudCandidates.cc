@@ -154,10 +154,14 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
 
     m_source_thread_id = 0;
     m_message = NULL;
+
+    m_last_requested_pinyin = (gchar *) g_malloc (sizeof(gchar) * (MAX_PINYIN_LEN + 1));
+    m_last_requested_pinyin[0] = '\0';
 }
 
 CloudCandidates::~CloudCandidates ()
 {
+    g_free(m_last_requested_pinyin);
 }
 
 gboolean
@@ -179,12 +183,29 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     if (g_utf8_strlen (n_gram_sentence_candidate->m_display_string.c_str(), -1) < CLOUD_MINIMUM_UTF8_TRIGGER_LENGTH)
     {
         m_cloud_candidates_first_pos = candidates.end ();
+        m_last_requested_pinyin[0] = '\0';
         return FALSE;   /* do not request because there is only one character */
     }
 
     /* check pinyin length */
     if (! m_editor->m_config.doublePinyin ())
+    {
         full_pinyin_text = m_editor->m_text;
+
+        if (strcmp(m_last_requested_pinyin, full_pinyin_text) == 0)
+        {
+            /* do not request again and update cached ones */
+            std::vector<EnhancedCandidate> m_candidates_with_prefix;
+            for (std::vector<EnhancedCandidate>::iterator i = m_candidates.begin (); i != m_candidates.end (); ++i)
+            {
+                EnhancedCandidate candidate_with_prefix = *i;
+                candidate_with_prefix.m_display_string = CANDIDATE_CLOUD_PREFIX + candidate_with_prefix.m_display_string;
+                m_candidates_with_prefix.push_back(candidate_with_prefix);
+            }
+            candidates.insert (m_cloud_candidates_first_pos, m_candidates_with_prefix.begin (), m_candidates_with_prefix.end ());
+            return FALSE;
+        }
+    }
     else
     {
         m_editor->updateAuxiliaryText ();
@@ -194,6 +215,22 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
         double_pinyin_text = g_strjoinv ("", tempArray);
 
         g_strfreev (tempArray);
+
+        if (strcmp(m_last_requested_pinyin, double_pinyin_text) == 0)
+        {
+            /* do not request again and update cached one */
+            std::vector<EnhancedCandidate> m_candidates_with_prefix;
+            for (std::vector<EnhancedCandidate>::iterator i = m_candidates.begin (); i != m_candidates.end (); ++i)
+            {
+                EnhancedCandidate candidate_with_prefix = *i;
+                candidate_with_prefix.m_display_string = CANDIDATE_CLOUD_PREFIX + candidate_with_prefix.m_display_string;
+                m_candidates_with_prefix.push_back(candidate_with_prefix);
+            }
+            candidates.insert (m_cloud_candidates_first_pos, m_candidates_with_prefix.begin (), m_candidates_with_prefix.end ());
+
+            g_free (double_pinyin_text);
+            return FALSE;
+        }
     }
 
     /* search the first non-ngram candidate */
@@ -298,6 +335,9 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
     SoupMessage *msg = soup_message_new ("GET", queryRequest);
     soup_session_send_async (m_session, msg, NULL, cloudResponseCallBack, static_cast<gpointer> (this));
     m_message = msg;
+
+    /* cache the last request string */
+    strcpy(m_last_requested_pinyin, requestStr);
 
     /* update loading text to replace pending text */
     for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
