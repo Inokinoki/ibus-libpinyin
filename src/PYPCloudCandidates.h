@@ -65,7 +65,7 @@ public:
     guint m_min_cloud_trigger_length;
     gboolean m_cloud_flag;
     guint m_delayed_time;
-    guint m_source_thread_id;
+    guint m_source_event_id;
     SoupMessage *m_message;
     gchar *m_last_requested_pinyin;
     std::vector<EnhancedCandidate>::iterator m_cloud_candidates_first_pos;
