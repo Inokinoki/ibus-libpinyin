@@ -645,8 +645,6 @@ BopomofoConfig::init ()
         m_instance.reset (new BopomofoConfig ());
         m_instance->readDefaultValues ();
     }
-    /*disable cloud input by default*/
-    m_instance->disableCloudInput();
 }
 
 void
