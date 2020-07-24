@@ -602,31 +602,31 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
                 cached.m_candidate_id = enhanced.m_candidate_id;
             }
         }
-        else if (ret_code == PARSER_NO_CANDIDATE)
+        else
         {
-            for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
-                if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type) {
-                    pos->m_display_string = CANDIDATE_NO_CANDIDATE_TEXT;
-                } else
-                    break;
+            String text;
+
+            switch (ret_code) {
+            case PARSER_NO_CANDIDATE:
+                text = CANDIDATE_NO_CANDIDATE_TEXT;
+                break;
+            case PARSER_INVALID_DATA:
+                text = CANDIDATE_INVALID_DATA_TEXT;
+                break;
+            case PARSER_BAD_FORMAT:
+                text = CANDIDATE_BAD_FORMAT_TEXT;
+                break;
             }
-        }
-        else if (ret_code == PARSER_INVALID_DATA)
-        {
-             for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
-                if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type) {
-                    pos->m_display_string = CANDIDATE_INVALID_DATA_TEXT;
-                } else
+            for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos)
+            {
+                if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type)
+                {
+                    pos->m_display_string = text;
+                }
+                else
+                {
                     break;
-            }
-        }
-        else if (ret_code == PARSER_BAD_FORMAT)
-        {
-            for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
-                if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type) {
-                    pos->m_display_string = CANDIDATE_BAD_FORMAT_TEXT;
-                } else
-                    break;
+                }
             }
         }
     }
