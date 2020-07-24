@@ -188,7 +188,7 @@ Config::valueChangedCallback (GSettings   *settings,
     g_variant_unref (value);
 }
 
-void 
+void
 Config::disableCloudInput(void)
 {
     m_enable_cloud_input = false;
