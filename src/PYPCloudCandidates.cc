@@ -47,9 +47,9 @@ static const std::string CANDIDATE_CLOUD_PREFIX = "☁";
 
 static const std::string CANDIDATE_PENDING_TEXT = CANDIDATE_CLOUD_PREFIX;
 static const std::string CANDIDATE_LOADING_TEXT = CANDIDATE_CLOUD_PREFIX + "...";
-static const std::string CANDIDATE_NO_CANDIDATE_TEXT = CANDIDATE_CLOUD_PREFIX + "[No Candidate]";
-static const std::string CANDIDATE_INVALID_DATA_TEXT = CANDIDATE_CLOUD_PREFIX + "[Invalid Data]";
-static const std::string CANDIDATE_BAD_FORMAT_TEXT = CANDIDATE_CLOUD_PREFIX + "[Bad Format]";
+static const std::string CANDIDATE_NO_CANDIDATE_TEXT = CANDIDATE_CLOUD_PREFIX + "[🚫]";
+static const std::string CANDIDATE_INVALID_DATA_TEXT = CANDIDATE_CLOUD_PREFIX + "[❌]";
+static const std::string CANDIDATE_BAD_FORMAT_TEXT = CANDIDATE_CLOUD_PREFIX + "[❓]";
 
 const char *BAIDU_URL_TEMPLATE = "http://olime.baidu.com/py?input=%s&inputtype=py&bg=0&ed=%d&result=hanzi&resultcoding=utf-8&ch_en=1&clientinfo=web&version=1";
 const char *GOOGLE_URL_TEMPLATE = "https://www.google.com/inputtools/request?ime=pinyin&text=%s&num=%d";
@@ -617,6 +617,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
                 text = CANDIDATE_BAD_FORMAT_TEXT;
                 break;
             }
+
             for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos)
             {
                 if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type)
