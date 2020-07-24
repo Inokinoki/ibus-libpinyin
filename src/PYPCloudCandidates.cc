@@ -285,7 +285,6 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
     m_editor = editor;
 
     m_cloud_source = m_editor->m_config.cloudInputSource ();
-    m_cloud_flag = FALSE;
     m_delayed_time = m_editor->m_config.cloudRequestDelayTime ();
     m_cloud_candidates_number = m_editor->m_config.cloudCandidatesNumber ();
 
@@ -387,6 +386,10 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     /* note the last cloud input candidate position */
     m_candidates_end_pos = m_cloud_candidates_first_pos + m_cloud_candidates_number;
 
+    /* update configuration before request */
+    m_cloud_source = m_editor->m_config.cloudInputSource ();
+    m_delayed_time = m_editor->m_config.cloudRequestDelayTime ();
+    m_cloud_candidates_number = m_editor->m_config.cloudCandidatesNumber ();
     if (! m_editor->m_config.doublePinyin ()) {
         delayedCloudAsyncRequest (full_pinyin_text);
     }
