@@ -538,6 +538,16 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
 
     ret_code = parser->parse (stream);
 
+    /* no annotation if there is NETWORK_ERROR, process before detecting parsed annotation,  */
+    if (ret_code == PARSER_NETWORK_ERROR) {
+        for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
+            if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type)
+                pos->m_display_string = CANDIDATE_INVALID_DATA_TEXT;
+            else
+                break;
+        }
+    }
+
     if (parser->getAnnotation ())
         strcpy (annotation, parser->getAnnotation ());
     else {
@@ -558,15 +568,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         g_strfreev (tempArray);
     }
 
-    if (ret_code == PARSER_NETWORK_ERROR) {
-        for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
-            if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type)
-                pos->m_display_string = CANDIDATE_INVALID_DATA_TEXT;
-            else
-                break;
-        }
-    }
-    else if (m_cloud_source == BAIDU || !g_strcmp0 (annotation, text) || !g_strcmp0 (annotation, double_pinyin_text)) {
+    if (m_cloud_source == BAIDU || !g_strcmp0 (annotation, text) || !g_strcmp0 (annotation, double_pinyin_text)) {
         if (ret_code == PARSER_NOERR) {
             /* update to the candidates list */
             std::vector<std::string> &updated_candidates = parser->getStringCandidates ();
