@@ -45,11 +45,17 @@ enum CandidateResponseParserError {
 
 static const std::string CANDIDATE_CLOUD_PREFIX = "☁";
 
-static const std::string CANDIDATE_PENDING_TEXT = CANDIDATE_CLOUD_PREFIX;
-static const std::string CANDIDATE_LOADING_TEXT = CANDIDATE_CLOUD_PREFIX + "...";
-static const std::string CANDIDATE_NO_CANDIDATE_TEXT = CANDIDATE_CLOUD_PREFIX + "[🚫]";
-static const std::string CANDIDATE_INVALID_DATA_TEXT = CANDIDATE_CLOUD_PREFIX + "[❌]";
-static const std::string CANDIDATE_BAD_FORMAT_TEXT = CANDIDATE_CLOUD_PREFIX + "[❓]";
+static const std::string CANDIDATE_PENDING_TEXT_WITHOUT_PREFIX      = "[⏱️]";
+static const std::string CANDIDATE_LOADING_TEXT_WITHOUT_PREFIX      = "...";
+static const std::string CANDIDATE_NO_CANDIDATE_TEXT_WITHOUT_PREFIX = "[🚫]";
+static const std::string CANDIDATE_INVALID_DATA_TEXT_WITHOUT_PREFIX = "[❌]";
+static const std::string CANDIDATE_BAD_FORMAT_TEXT_WITHOUT_PREFIX   = "[❓]";
+
+static const std::string CANDIDATE_PENDING_TEXT         = CANDIDATE_CLOUD_PREFIX + CANDIDATE_PENDING_TEXT_WITHOUT_PREFIX;
+static const std::string CANDIDATE_LOADING_TEXT         = CANDIDATE_CLOUD_PREFIX + CANDIDATE_LOADING_TEXT_WITHOUT_PREFIX;
+static const std::string CANDIDATE_NO_CANDIDATE_TEXT    = CANDIDATE_CLOUD_PREFIX + CANDIDATE_NO_CANDIDATE_TEXT_WITHOUT_PREFIX;
+static const std::string CANDIDATE_INVALID_DATA_TEXT    = CANDIDATE_CLOUD_PREFIX + CANDIDATE_INVALID_DATA_TEXT_WITHOUT_PREFIX ;
+static const std::string CANDIDATE_BAD_FORMAT_TEXT      = CANDIDATE_CLOUD_PREFIX + CANDIDATE_BAD_FORMAT_TEXT_WITHOUT_PREFIX;
 
 const char *BAIDU_URL_TEMPLATE = "http://olime.baidu.com/py?input=%s&inputtype=py&bg=0&ed=%d&result=hanzi&resultcoding=utf-8&ch_en=1&clientinfo=web&version=1";
 const char *GOOGLE_URL_TEMPLATE = "https://www.google.com/inputtools/request?ime=pinyin&text=%s&num=%d";
@@ -233,7 +239,7 @@ private:
             JsonArray *baidu_candidate = json_array_get_array_element (baidu_candidate_array, i);
 
             if (json_array_get_length (baidu_candidate) < 1)
-                candidate = CANDIDATE_INVALID_DATA_TEXT;
+                candidate = CANDIDATE_INVALID_DATA_TEXT_WITHOUT_PREFIX;
             else
                 candidate = json_array_get_string_element (baidu_candidate, 0);
 
@@ -309,16 +315,23 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     /* refer pinyin generated in double pinyin mode, need free */
     gchar *double_pinyin_text;
 
+    /*  */
+    std::vector<EnhancedCandidate>::iterator cloud_candidates_first_pos;
+
     /* check the length of the first n-gram candidate */
     std::vector<EnhancedCandidate>::iterator n_gram_sentence_candidate = candidates.begin ();
     if (n_gram_sentence_candidate == candidates.end ()) {
-        m_cloud_candidates_first_pos = candidates.end ();
         return FALSE;   /* no candidate */
     }
     if (g_utf8_strlen (n_gram_sentence_candidate->m_display_string.c_str (), -1) < CLOUD_MINIMUM_UTF8_TRIGGER_LENGTH) {
-        m_cloud_candidates_first_pos = candidates.end ();
         m_last_requested_pinyin[0] = '\0';
         return FALSE;   /* do not request because there is only one character */
+    }
+
+    /* search the first non-ngram candidate */
+    for (cloud_candidates_first_pos = candidates.begin (); cloud_candidates_first_pos != candidates.end (); ++cloud_candidates_first_pos) {
+        if (CANDIDATE_NBEST_MATCH != cloud_candidates_first_pos->m_candidate_type)
+            break;
     }
 
     /* check pinyin length */
@@ -333,7 +346,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
                 candidate_with_prefix.m_display_string = CANDIDATE_CLOUD_PREFIX + candidate_with_prefix.m_display_string;
                 m_candidates_with_prefix.push_back (candidate_with_prefix);
             }
-            candidates.insert (m_cloud_candidates_first_pos, m_candidates_with_prefix.begin (), m_candidates_with_prefix.end ());
+            candidates.insert (cloud_candidates_first_pos, m_candidates_with_prefix.begin (), m_candidates_with_prefix.end ());
             return FALSE;
         }
     }
@@ -355,21 +368,15 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
                 candidate_with_prefix.m_display_string = CANDIDATE_CLOUD_PREFIX + candidate_with_prefix.m_display_string;
                 m_candidates_with_prefix.push_back (candidate_with_prefix);
             }
-            candidates.insert (m_cloud_candidates_first_pos, m_candidates_with_prefix.begin (), m_candidates_with_prefix.end ());
+            candidates.insert (cloud_candidates_first_pos, m_candidates_with_prefix.begin (), m_candidates_with_prefix.end ());
 
             g_free (double_pinyin_text);
             return FALSE;
         }
     }
 
-    /* search the first non-ngram candidate */
-    for (m_cloud_candidates_first_pos = candidates.begin (); m_cloud_candidates_first_pos != candidates.end (); ++m_cloud_candidates_first_pos) {
-        if (CANDIDATE_NBEST_MATCH != m_cloud_candidates_first_pos->m_candidate_type)
-            break;
-    }
-
     /* have cloud candidates already */
-    EnhancedCandidate testCan = *m_cloud_candidates_first_pos;
+    EnhancedCandidate testCan = *cloud_candidates_first_pos;
     if (testCan.m_candidate_type == CANDIDATE_CLOUD_INPUT)
         return FALSE;
 
@@ -381,10 +388,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
         enhanced.m_candidate_type = CANDIDATE_CLOUD_INPUT;
         m_candidates.push_back (enhanced);
     }
-    candidates.insert (m_cloud_candidates_first_pos, m_candidates.begin (), m_candidates.end ());
-
-    /* note the last cloud input candidate position */
-    m_candidates_end_pos = m_cloud_candidates_first_pos + m_cloud_candidates_number;
+    candidates.insert (cloud_candidates_first_pos, m_candidates.begin (), m_candidates.end ());
 
     /* update configuration before request */
     m_cloud_source = m_editor->m_config.cloudInputSource ();
@@ -474,12 +478,8 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
     strcpy (m_last_requested_pinyin, requestStr);
 
     /* update loading text to replace pending text */
-    for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
-        if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type)
-            if (CANDIDATE_PENDING_TEXT == pos->m_display_string)
-                pos->m_display_string = CANDIDATE_LOADING_TEXT;
-        else
-            break;
+    for (std::vector<EnhancedCandidate>::iterator pos = m_candidates.begin (); pos != m_candidates.end (); ++pos) {
+        pos->m_display_string = CANDIDATE_LOADING_TEXT_WITHOUT_PREFIX;
     }
 
     /* only update lookup table when there is still pinyin text */
@@ -540,11 +540,8 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
 
     /* no annotation if there is NETWORK_ERROR, process before detecting parsed annotation,  */
     if (ret_code == PARSER_NETWORK_ERROR) {
-        for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
-            if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type)
-                pos->m_display_string = CANDIDATE_INVALID_DATA_TEXT;
-            else
-                break;
+        for (std::vector<EnhancedCandidate>::iterator pos = m_candidates.begin (); pos != m_candidates.end (); ++pos) {
+            pos->m_display_string = CANDIDATE_INVALID_DATA_TEXT_WITHOUT_PREFIX;
         }
     }
 
@@ -570,22 +567,14 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
 
     if (m_cloud_source == BAIDU || !g_strcmp0 (annotation, text) || !g_strcmp0 (annotation, double_pinyin_text)) {
         if (ret_code == PARSER_NOERR) {
-            /* update to the candidates list */
+            /* update to the cached candidates list */
             std::vector<std::string> &updated_candidates = parser->getStringCandidates ();
 
-            std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos;
             std::vector<EnhancedCandidate>::iterator cached_candidate_pos = m_candidates.begin ();
-            for (guint i = 0; cached_candidate_pos != m_candidates.end () && pos != m_candidates_end_pos && i < updated_candidates.size ();
-                ++i, ++pos, ++cached_candidate_pos) {
-                /* display candidate with prefix in lookup table */
-                EnhancedCandidate & enhanced = *pos;
-                enhanced.m_candidate_id = i;
-                enhanced.m_display_string = CANDIDATE_CLOUD_PREFIX + updated_candidates[i];
-
+            for (guint i = 0; cached_candidate_pos != m_candidates.end () && i < updated_candidates.size (); ++i, ++cached_candidate_pos) {
                 /* cache candidate without prefix in m_candidates */
                 EnhancedCandidate & cached = *cached_candidate_pos;
                 cached.m_display_string = updated_candidates[i];
-                cached.m_candidate_id = enhanced.m_candidate_id;
             }
         }
         else {
@@ -593,21 +582,18 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
 
             switch (ret_code) {
             case PARSER_NO_CANDIDATE:
-                text = CANDIDATE_NO_CANDIDATE_TEXT;
+                text = CANDIDATE_NO_CANDIDATE_TEXT_WITHOUT_PREFIX;
                 break;
             case PARSER_INVALID_DATA:
-                text = CANDIDATE_INVALID_DATA_TEXT;
+                text = CANDIDATE_INVALID_DATA_TEXT_WITHOUT_PREFIX;
                 break;
             case PARSER_BAD_FORMAT:
-                text = CANDIDATE_BAD_FORMAT_TEXT;
+                text = CANDIDATE_BAD_FORMAT_TEXT_WITHOUT_PREFIX;
                 break;
             }
 
-            for (std::vector<EnhancedCandidate>::iterator pos = m_cloud_candidates_first_pos; pos != m_candidates_end_pos; ++pos) {
-                if (CANDIDATE_CLOUD_INPUT == pos->m_candidate_type)
-                    pos->m_display_string = text;
-                else
-                    break;
+            for (std::vector<EnhancedCandidate>::iterator pos = m_candidates.begin (); pos != m_candidates.end (); ++pos) {
+                pos->m_display_string = text;
             }
         }
     }
