@@ -296,14 +296,10 @@ CloudCandidates::CloudCandidates (PhoneticEditor * editor)
 
     m_source_event_id = 0;
     m_message = NULL;
-
-    m_last_requested_pinyin = (gchar *) g_malloc (sizeof(gchar) * (MAX_PINYIN_LEN + 1));
-    m_last_requested_pinyin[0] = '\0';
 }
 
 CloudCandidates::~CloudCandidates ()
 {
-    g_free (m_last_requested_pinyin);
 }
 
 gboolean
@@ -324,7 +320,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
         return FALSE;   /* no candidate */
     }
     if (g_utf8_strlen (n_gram_sentence_candidate->m_display_string.c_str (), -1) < CLOUD_MINIMUM_UTF8_TRIGGER_LENGTH) {
-        m_last_requested_pinyin[0] = '\0';
+        m_last_requested_pinyin = "";
         return FALSE;   /* do not request because there is only one character */
     }
 
@@ -338,7 +334,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     if (! m_editor->m_config.doublePinyin ()) {
         full_pinyin_text = m_editor->m_text;
 
-        if (strcmp (m_last_requested_pinyin, full_pinyin_text) == 0) {
+        if (strcmp (m_last_requested_pinyin.c_str(), full_pinyin_text) == 0) {
             /* do not request again and update cached ones */
             std::vector<EnhancedCandidate> m_candidates_with_prefix;
             for (std::vector<EnhancedCandidate>::iterator i = m_candidates.begin (); i != m_candidates.end (); ++i) {
@@ -360,7 +356,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
 
         g_strfreev (tempArray);
 
-        if (strcmp (m_last_requested_pinyin, double_pinyin_text) == 0) {
+        if (strcmp (m_last_requested_pinyin.c_str(), double_pinyin_text) == 0) {
             /* do not request again and update cached one */
             std::vector<EnhancedCandidate> m_candidates_with_prefix;
             for (std::vector<EnhancedCandidate>::iterator i = m_candidates.begin (); i != m_candidates.end (); ++i) {
@@ -477,7 +473,7 @@ CloudCandidates::cloudAsyncRequest (const gchar* requestStr)
     m_message = msg;
 
     /* cache the last request string */
-    strcpy (m_last_requested_pinyin, requestStr);
+    m_last_requested_pinyin = requestStr;
 
     /* update loading text to replace pending text */
     for (std::vector<EnhancedCandidate>::iterator pos = m_candidates.begin (); pos != m_candidates.end (); ++pos) {
