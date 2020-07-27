@@ -625,6 +625,9 @@ CloudCandidates::updateLookupTable ()
     /* retrieve cursor position in lookup table */
     guint cursor = m_editor->m_lookup_table.cursorPos ();
 
+    /* update cached cloud input candidates */
+    m_editor->updateCandidates ();
+
     /* regenerate lookup table */
     m_editor->m_lookup_table.clear ();
     m_editor->fillLookupTable ();
