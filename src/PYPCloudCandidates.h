@@ -68,8 +68,6 @@ public:
     guint m_source_event_id;
     SoupMessage *m_message;
     gchar *m_last_requested_pinyin;
-    std::vector<EnhancedCandidate>::iterator m_cloud_candidates_first_pos;
-    std::vector<EnhancedCandidate>::iterator m_candidates_end_pos;
 
 private:
     static gboolean delayedCloudAsyncRequestCallBack (gpointer user_data);
