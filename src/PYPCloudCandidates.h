@@ -67,7 +67,7 @@ public:
     guint m_delayed_time;
     guint m_source_event_id;
     SoupMessage *m_message;
-    gchar *m_last_requested_pinyin;
+    std::string m_last_requested_pinyin;
 
 private:
     static gboolean delayedCloudAsyncRequestCallBack (gpointer user_data);
