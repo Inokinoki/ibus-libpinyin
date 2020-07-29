@@ -311,7 +311,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     /* refer pinyin generated in double pinyin mode, need free */
     gchar *double_pinyin_text;
 
-    /*  */
+    /* find the first position after n-gram candidates */
     std::vector<EnhancedCandidate>::iterator cloud_candidates_first_pos;
 
     /* check the length of the first n-gram candidate */
