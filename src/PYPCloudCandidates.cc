@@ -285,7 +285,7 @@ CloudCandidates::delayedCloudAsyncRequestDestroyCallBack (gpointer user_data)
         g_free (user_data);
 }
 
-CloudCandidates::CloudCandidates (PhoneticEditor * editor)
+CloudCandidates::CloudCandidates (PhoneticEditor * editor) : m_bopomofo_mode(false)
 {
     m_session = soup_session_new ();
     m_editor = editor;
@@ -308,8 +308,8 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     /* refer pinyin retrieved in full pinyin mode */
     const gchar *full_pinyin_text;
 
-    /* refer pinyin generated in double pinyin mode, need free */
-    gchar *double_pinyin_text;
+    /* refer pinyin generated in double pinyin mode or bopomofo mode, need free */
+    gchar *pinyin_text;
 
     /* find the first position after n-gram candidates */
     std::vector<EnhancedCandidate>::iterator cloud_candidates_first_pos;
@@ -330,8 +330,8 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
             break;
     }
 
-    /* check pinyin length */
-    if (! m_editor->m_config.doublePinyin ()) {
+    /* neither double pinyin mode nor bopomofo mode */
+    if (! m_editor->m_config.doublePinyin () && ! m_bopomofo_mode) {
         full_pinyin_text = m_editor->m_text;
 
         if (strcmp (m_last_requested_pinyin.c_str(), full_pinyin_text) == 0) {
@@ -348,15 +348,17 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     }
     else
     {
-        m_editor->updateAuxiliaryText ();
-        String stripped = m_editor->m_buffer;
-        const gchar *temp= stripped;
-        gchar** tempArray =  g_strsplit_set (temp, " |", -1);
-        double_pinyin_text = g_strjoinv ("", tempArray);
+        m_editor->updateFullPinyinBuffer ();
+        String stripped = m_editor->m_full_pinyin_buffer;
+        const gchar *temp = stripped;
+
+        /* drop space, tone, spilter */
+        gchar** tempArray =  g_strsplit_set (temp, " |12345", -1);
+        pinyin_text = g_strjoinv ("", tempArray);
 
         g_strfreev (tempArray);
 
-        if (strcmp (m_last_requested_pinyin.c_str(), double_pinyin_text) == 0) {
+        if (strcmp (m_last_requested_pinyin.c_str(), pinyin_text) == 0) {
             /* do not request again and update cached one */
             std::vector<EnhancedCandidate> m_candidates_with_prefix;
             for (std::vector<EnhancedCandidate>::iterator i = m_candidates.begin (); i != m_candidates.end (); ++i) {
@@ -366,7 +368,7 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
             }
             candidates.insert (cloud_candidates_first_pos, m_candidates_with_prefix.begin (), m_candidates_with_prefix.end ());
 
-            g_free (double_pinyin_text);
+            g_free (pinyin_text);
             return FALSE;
         }
     }
@@ -390,12 +392,12 @@ CloudCandidates::processCandidates (std::vector<EnhancedCandidate> & candidates)
     m_cloud_source = m_editor->m_config.cloudInputSource ();
     m_delayed_time = m_editor->m_config.cloudRequestDelayTime ();
     m_cloud_candidates_number = m_editor->m_config.cloudCandidatesNumber ();
-    if (! m_editor->m_config.doublePinyin ()) {
+    if (! m_editor->m_config.doublePinyin () && ! m_bopomofo_mode) {
         delayedCloudAsyncRequest (full_pinyin_text);
     }
     else {
-        delayedCloudAsyncRequest (double_pinyin_text);
-        g_free (double_pinyin_text);
+        delayedCloudAsyncRequest (pinyin_text);
+        g_free (pinyin_text);
     }
 
     return TRUE;
