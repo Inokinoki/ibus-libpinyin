@@ -528,7 +528,7 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
     guint ret_code;
     CloudCandidatesResponseJsonParser *parser = NULL;
     const gchar *text = NULL;
-    gchar *double_pinyin_text = NULL;
+    gchar *pinyin_text = NULL;
     gchar annotation[MAX_PINYIN_LEN + 1];
 
     if (m_cloud_source == BAIDU)
@@ -552,20 +552,24 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
         return;
     }
 
-    if (! m_editor->m_config.doublePinyin ()) {
+    if (! m_editor->m_config.doublePinyin () && ! m_bopomofo_mode) {
         /* get current text in editor */
         text = m_editor->m_text;
     }
     else {
-        /* get current double pinyin text */
-        String stripped = m_editor->m_buffer;
-        const gchar *temp= stripped;
-        gchar** tempArray =  g_strsplit_set (temp, " |", -1);
-        double_pinyin_text = g_strjoinv ("", tempArray);
+        /* get current pinyin text */
+        m_editor->updateFullPinyinBuffer ();
+        String stripped = m_editor->m_full_pinyin_buffer;
+        const gchar *temp = stripped;
+
+        /* drop space, tone, spilter */
+        gchar** tempArray =  g_strsplit_set (temp, " |12345", -1);
+
+        pinyin_text = g_strjoinv ("", tempArray);
         g_strfreev (tempArray);
     }
 
-    if (m_cloud_source == BAIDU || !g_strcmp0 (annotation, text) || !g_strcmp0 (annotation, double_pinyin_text)) {
+    if (m_cloud_source == BAIDU || !g_strcmp0 (annotation, text) || !g_strcmp0 (annotation, pinyin_text)) {
         if (ret_code == PARSER_NOERR) {
             /* update to the cached candidates list */
             std::vector<std::string> &updated_candidates = parser->getStringCandidates ();
@@ -601,8 +605,8 @@ CloudCandidates::processCloudResponse (GInputStream *stream, std::vector<Enhance
     if (parser)
         delete parser;
 
-    if (double_pinyin_text)
-        g_free (double_pinyin_text);
+    if (pinyin_text)
+        g_free (pinyin_text);
 }
 
 void
