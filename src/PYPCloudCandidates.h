@@ -33,11 +33,19 @@
 
 
 
+class BaiduCloudCandidatesResponseJsonParser;
+class GoogleCloudCandidatesResponseJsonParser;
+
 namespace PY {
 
 #define BUFFERLENGTH 2048
-#define CLOUD_MINIMUM_TRIGGER_LENGTH 2
 #define CLOUD_MINIMUM_UTF8_TRIGGER_LENGTH 2
+
+enum InputMode {
+    FullPinyin = 0,
+    DoublePinyin,
+    Bopomofo
+};
 
 class PhoneticEditor;
 
@@ -48,25 +56,19 @@ public:
     CloudCandidates (PhoneticEditor *editor);
     ~CloudCandidates();
 
-    void setBopomofoMode (bool mode) { m_bopomofo_mode = mode; }
-    bool isBopomofoMode () { return m_bopomofo_mode; }
-    bool isBopomofoMode () const { return m_bopomofo_mode; }
+    void setInputMode (InputMode mode) { m_input_mode = mode; }
 
     gboolean processCandidates (std::vector<EnhancedCandidate> & candidates);
 
     int selectCandidate (EnhancedCandidate & enhanced);
 
     void cloudAsyncRequest (const gchar* requestStr);
-    void cloudAsyncRequest (const gchar* requestStr, std::vector<EnhancedCandidate> & candidates);
     void cloudSyncRequest (const gchar* requestStr, std::vector<EnhancedCandidate> & candidates);
 
     void delayedCloudAsyncRequest (const gchar* requestStr);
 
     void updateLookupTable ();
 
-    guint m_cloud_source;
-    guint m_cloud_candidates_number;
-    guint m_delayed_time;
     guint m_source_event_id;
     SoupMessage *m_message;
     std::string m_last_requested_pinyin;
@@ -77,10 +79,15 @@ private:
     static void cloudResponseCallBack (GObject *object, GAsyncResult *result, gpointer user_data);
 
     void processCloudResponse (GInputStream *stream, std::vector<EnhancedCandidate> & candidates);
+
+    /* get internal full pinyin representation */
+    String getFullPinyin ();
 private:
     SoupSession *m_session;
-    bool m_bopomofo_mode;
+    InputMode m_input_mode;
 
+    BaiduCloudCandidatesResponseJsonParser *m_baidu_parser;
+    GoogleCloudCandidatesResponseJsonParser *m_google_parser;
 protected:
     std::vector<EnhancedCandidate> m_candidates;
 };

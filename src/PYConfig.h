@@ -99,6 +99,11 @@ public:
     guint cloudCandidatesNumber (void) const    { return m_cloud_candidates_number; }
     guint cloudRequestDelayTime (void) const    { return m_cloud_request_delay_time; }
 
+    gboolean enableCloudInput (void) const      { return m_enable_cloud_input; }
+    guint cloudInputSource (void) const         { return m_cloud_input_source; }
+    guint cloudCandidatesNumber (void) const    { return m_cloud_candidates_number; }
+    guint cloudRequestDelayTime (void) const    { return m_cloud_request_delay_time; }
+
 protected:
     bool read (const gchar * name, bool defval);
     gint read (const gchar * name, gint defval);
