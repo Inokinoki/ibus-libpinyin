@@ -103,7 +103,7 @@ PunctEditor::processPunct (guint keyval, guint keycode, guint modifiers)
     switch (keyval) {
     case IBUS_grave:        /* ` */
     case IBUS_asciitilde:   /* ~ */
-    case IBUS_exclam:       /* ~ */
+    case IBUS_exclam:       /* ! */
     case IBUS_at:           /* @ */
     case IBUS_numbersign:   /* # */
     case IBUS_dollar:       /* $ */
